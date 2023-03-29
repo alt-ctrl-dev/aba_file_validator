@@ -24,3 +24,8 @@ aba_file_validator-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+
+*.beam
+/config/*.secret.exs
+.elixir_ls/
