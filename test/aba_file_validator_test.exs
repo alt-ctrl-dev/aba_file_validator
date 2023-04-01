@@ -94,8 +94,7 @@ defmodule AbaFileValidatorTest do
         "7999-999            000000000000000353890000035389                        000002                                        "
 
       assert AbaFileValidator.get_file_total_record(entry) ==
-               {:ok, "01", "CBA", "test                      ", "301500", "221212121227",
-                "121222"}
+               {:ok, "0000000000", "0000035389", "0000035389", "000002"}
     end
 
     test "returns an error if incorrect length with correct starting code" do
@@ -119,15 +118,24 @@ defmodule AbaFileValidatorTest do
         "7999 999            000000000000000353890000035389                        000002                                        "
 
       assert AbaFileValidator.get_file_total_record(entry) ==
-               {:error, :invalid_format}
+               {:error, :invalid_format, [:bsb_filler]}
     end
 
     test "returns an error if empty string" do
       entry =
         "7                                                                                                                       "
 
-      assert AbaFileValidator.get_descriptive_record(entry) ==
-               {:error, :invalid_format}
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:error, :invalid_format,
+               [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}
+    end
+
+    test "returns an error if balance don't match" do
+      entry =
+        "7999 999            000000000000000353890000035388                        000002                                        "
+
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:error, :invalid_format, [:bsb_filler, :net_total_mismatch]}
     end
   end
 end

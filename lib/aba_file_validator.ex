@@ -116,11 +116,14 @@ defmodule AbaFileValidator do
       iex> AbaFileValidator.get_file_total_record("1                 01CBA       test                      301500221212121227121222                                        ")
       {:error, :incorrect_starting_code}
 
-      iex> AbaFileValidator.get_file_total_record("0                   CBA       test                      301500221212121227121222                                        ")
-      {:error, :invalid_format}
+      iex> AbaFileValidator.get_file_total_record("7999 999            000000000000000353890000035388                        000002                                        ")
+      {:error, :invalid_format, [:bsb_filler, :net_total_mismatch ]}
 
-      iex> AbaFileValidator.get_file_total_record("0                 01CBA       test                      301500221212121227121222                                        ")
-      {:ok, "01", "CBA", "test                      ", "301500", "221212121227", "121222"}
+      iex> AbaFileValidator.get_file_total_record("7                                                                                                                       ")
+      {:error, :invalid_format, [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}
+
+      iex> AbaFileValidator.get_file_total_record("7999-999            000000000000000353890000035389                        000002                                        ")
+      {:ok, "0000000000", "0000035389", "0000035389", "000002"}
 
   """
   def get_file_total_record(entry) when not is_binary(entry) do
@@ -137,30 +140,53 @@ defmodule AbaFileValidator do
         {:error, :incorrect_starting_code}
       else
         {bsb_filler, entry} = String.split_at(entry, 7)
-        {reel_sequence_number, entry} = String.split_at(entry, 2)
-        {bank_abbreviation, entry} = String.split_at(entry, 3)
-        {mid_blank, entry} = String.split_at(entry, 7)
-        {user_preferred_specification, entry} = String.split_at(entry, 26)
-        {user_id_number, entry} = String.split_at(entry, 6)
-        {description, entry} = String.split_at(entry, 12)
-        {date, last_blank} = String.split_at(entry, 6)
+        {first_blank, entry} = String.split_at(entry, 12)
+        {net_total, entry} = String.split_at(entry, 10)
+        {total_credit, entry} = String.split_at(entry, 10)
+        {total_debit, entry} = String.split_at(entry, 10)
+        {mid_blank, entry} = String.split_at(entry, 24)
+        {record_count, last_blank} = String.split_at(entry, 6)
 
-        with true <- code == "7",
-             true <- correct_length?(bsb_filler, 17),
-             true <- correct_length?(mid_blank, 7),
-             true <- correct_length?(last_blank, 40),
-             false <- string_empty?(reel_sequence_number),
-             false <- string_empty?(bank_abbreviation),
-             false <- string_empty?(user_preferred_specification),
-             false <- string_empty?(user_id_number),
-             false <- string_empty?(description),
-             true <- valid_date?(date),
-             false <- string_empty?(date) do
-          {:ok, reel_sequence_number, bank_abbreviation, user_preferred_specification,
-           user_id_number, description, date}
+        errors = []
+
+        errors = if bsb_filler !== "999-999", do: errors ++ [:bsb_filler], else: errors
+
+        errors =
+          if not correct_length?(first_blank, 12), do: errors ++ [:first_blank], else: errors
+
+        errors = if not correct_length?(last_blank, 40), do: errors ++ [:last_blank], else: errors
+
+        errors = if not correct_length?(mid_blank, 24), do: errors ++ [:mid_blank], else: errors
+
+        errors = if string_empty?(net_total), do: errors ++ [:net_total], else: errors
+
+        errors = if string_empty?(total_credit), do: errors ++ [:total_credit], else: errors
+
+        errors =
+          if string_empty?(total_debit),
+            do: errors ++ [:total_debit],
+            else: errors
+
+        errors = if string_empty?(record_count), do: errors ++ [:record_count], else: errors
+
+        errors =
+          unless string_empty?(net_total) and string_empty?(total_credit) and
+                   string_empty?(total_debit) do
+            net_amount = String.to_integer(net_total)
+            credit_amount = String.to_integer(total_credit)
+            debit_amount = String.to_integer(total_debit)
+
+            if net_amount !== credit_amount - debit_amount,
+              do: errors ++ [:net_total_mismatch],
+              else: errors
+          else
+            errors
+          end
+
+        if(length(errors) > 0) do
+          {:error, :invalid_format, errors}
         else
-          _error ->
-            {:error, :invalid_format}
+          {:ok, net_total, total_credit, total_debit, record_count}
         end
       end
     end
