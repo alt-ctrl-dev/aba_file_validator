@@ -116,21 +116,26 @@ defmodule AbaFileValidator do
       iex> AbaFileValidator.get_file_total_record("1                 01CBA       test                      301500221212121227121222                                        ")
       {:error, :incorrect_starting_code}
 
-      iex> AbaFileValidator.get_file_total_record("7999 999            000000000000000353890000035388                        000002                                        ")
+      iex> AbaFileValidator.get_file_total_record("7999 999            000000000000000353890000035388                        000000                                        ")
       {:error, :invalid_format, [:bsb_filler, :net_total_mismatch ]}
 
       iex> AbaFileValidator.get_file_total_record("7                                                                                                                       ")
       {:error, :invalid_format, [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}
 
-      iex> AbaFileValidator.get_file_total_record("7999-999            000000000000000353890000035389                        000002                                        ")
-      {:ok, "0000000000", "0000035389", "0000035389", "000002"}
+      iex> AbaFileValidator.get_file_total_record("7999 999            000000000000000353890000035388                        000002                                        ")
+      {:error, :invalid_format, [:bsb_filler, :net_total_mismatch, :records_mismatch]}
+
+      iex> AbaFileValidator.get_file_total_record("7999-999            000000000000000353890000035389                        000000                                        ")
+      {:ok, 0, 35389, 35389, 0}
 
   """
-  def get_file_total_record(entry) when not is_binary(entry) do
+  def get_file_total_record(entry, records \\ 0)
+
+  def get_file_total_record(entry, _records) when not is_binary(entry) do
     {:error, :invalid_input}
   end
 
-  def get_file_total_record(entry) do
+  def get_file_total_record(entry, records) when is_number(records) do
     if not correct_length?(entry, 120) do
       {:error, :incorrect_length}
     else
@@ -183,10 +188,20 @@ defmodule AbaFileValidator do
             errors
           end
 
+        errors =
+          unless string_empty?(record_count) do
+            if records !== String.to_integer(record_count),
+              do: errors ++ [:records_mismatch],
+              else: errors
+          else
+            errors
+          end
+
         if(length(errors) > 0) do
           {:error, :invalid_format, errors}
         else
-          {:ok, net_total, total_credit, total_debit, record_count}
+          {:ok, String.to_integer(net_total), String.to_integer(total_credit),
+           String.to_integer(total_debit), String.to_integer(record_count)}
         end
       end
     end

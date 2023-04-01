@@ -91,10 +91,10 @@ defmodule AbaFileValidatorTest do
   describe "AbaFileValidator.get_file_total_record/1" do
     test "validates succesfully" do
       entry =
-        "7999-999            000000000000000353890000035389                        000002                                        "
+        "7999-999            000000000000000353890000035389                        000000                                        "
 
       assert AbaFileValidator.get_file_total_record(entry) ==
-               {:ok, "0000000000", "0000035389", "0000035389", "000002"}
+               {:ok, 0, 35389, 35389, 0}
     end
 
     test "returns an error if incorrect length with correct starting code" do
@@ -115,7 +115,7 @@ defmodule AbaFileValidatorTest do
 
     test "returns an error if invalid string" do
       entry =
-        "7999 999            000000000000000353890000035389                        000002                                        "
+        "7999 999            000000000000000353890000035389                        000000                                        "
 
       assert AbaFileValidator.get_file_total_record(entry) ==
                {:error, :invalid_format, [:bsb_filler]}
@@ -132,10 +132,18 @@ defmodule AbaFileValidatorTest do
 
     test "returns an error if balance don't match" do
       entry =
-        "7999 999            000000000000000353890000035388                        000002                                        "
+        "7999 999            000000000000000353890000035388                        000000                                        "
 
       assert AbaFileValidator.get_file_total_record(entry) ==
                {:error, :invalid_format, [:bsb_filler, :net_total_mismatch]}
+    end
+
+    test "returns an error if records don't match" do
+      entry =
+        "7999 999            000000000000000353890000035389                        000002                                        "
+
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:error, :invalid_format, [:bsb_filler, :records_mismatch]}
     end
   end
 end
