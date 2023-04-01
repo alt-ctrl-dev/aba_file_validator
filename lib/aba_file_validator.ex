@@ -4,7 +4,7 @@ defmodule AbaFileValidator do
   """
 
   @doc """
-  Hello world.
+  Get a description for a given transaction code
 
   ## Examples
 
