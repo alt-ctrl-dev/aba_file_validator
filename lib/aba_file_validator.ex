@@ -9,7 +9,7 @@ defmodule AbaFileValidator do
   ## Examples
 
       iex> AbaFileValidator.get_transaction_code_description("11")
-      :not_provided
+      :error
 
       iex> AbaFileValidator.get_transaction_code_description(13)
       "Externally initiated debit items"
