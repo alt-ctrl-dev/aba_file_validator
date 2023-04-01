@@ -33,5 +33,5 @@ defmodule AbaFileValidator do
   def get_transaction_code_description("56"), do: "Dividend"
   def get_transaction_code_description(57), do: "Debenture/Note Interest"
   def get_transaction_code_description("57"), do: "Debenture/Note Interest"
-  def get_transaction_code_description(_), do: :not_provided
+  def get_transaction_code_description(_), do: :error
 end

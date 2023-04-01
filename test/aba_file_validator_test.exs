@@ -3,7 +3,7 @@ defmodule AbaFileValidatorTest do
   doctest AbaFileValidator
 
   test "transaction code description" do
-    assert AbaFileValidator.get_transaction_code_description(11) == :not_provided
+    assert AbaFileValidator.get_transaction_code_description(11) == :error
     assert AbaFileValidator.get_transaction_code_description(13) == "Externally initiated debit items"
     assert AbaFileValidator.get_transaction_code_description("13") == "Externally initiated debit items"
     assert AbaFileValidator.get_transaction_code_description(50) == "Externally initiated credit items with the exception of those bearing Transaction Codes"
