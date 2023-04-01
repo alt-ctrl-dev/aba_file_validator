@@ -45,11 +45,11 @@ defmodule AbaFileValidatorTest do
       assert AbaFileValidator.validate_descriptive_record(entry) == :ok
     end
 
-    test "returns an error if first character is not zero" do
+    test "returns an error if incorrect length" do
       assert AbaFileValidator.validate_descriptive_record("1") == {:error, :incorrect_length}
     end
 
-    test "if first character is not zero" do
+    test "returns an error if incorrect starting code" do
       entry =
         "1                 01CBA       test                      301500221212121227121222                                        "
 
