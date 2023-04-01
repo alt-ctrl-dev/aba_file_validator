@@ -26,7 +26,7 @@ defmodule AbaFileValidator do
       {:error, :incorrect_starting_code}
 
       iex> AbaFileValidator.get_descriptive_record("0                   CBA       test                      301500221212121227121222                                        ")
-      {:error, :invalid_format}
+      {:error, :invalid_format, [:reel_sequence_number]}
 
       iex> AbaFileValidator.get_descriptive_record("0                 01CBA       test                      301500221212121227121222                                        ")
       {:ok, "01", "CBA", "test                      ", "301500", "221212121227", "121222"}
@@ -54,22 +54,46 @@ defmodule AbaFileValidator do
         {description, entry} = String.split_at(entry, 12)
         {date, last_blank} = String.split_at(entry, 6)
 
-        with true <- code == "0",
-             true <- correct_length?(first_blank, 17),
-             true <- correct_length?(mid_blank, 7),
-             true <- correct_length?(last_blank, 40),
-             false <- string_empty?(reel_sequence_number),
-             false <- string_empty?(bank_abbreviation),
-             false <- string_empty?(user_preferred_specification),
-             false <- string_empty?(user_id_number),
-             false <- string_empty?(description),
-             true <- valid_date?(date),
-             false <- string_empty?(date) do
-          {:ok, reel_sequence_number, bank_abbreviation, user_preferred_specification,
-           user_id_number, description, date}
-        else
-          _error ->
-            {:error, :invalid_format}
+        with correct_first_blanks <- correct_length?(first_blank, 17),
+             correct_mid_blanks <- correct_length?(mid_blank, 7),
+             correct_last_blanks <- correct_length?(last_blank, 40),
+             reel_sequence_number_empty? <- string_empty?(reel_sequence_number),
+             bank_abbreviation_empty? <- string_empty?(bank_abbreviation),
+             user_preferred_specification_empty? <- string_empty?(user_preferred_specification),
+             user_id_number_empty? <- string_empty?(user_id_number),
+             description_empty? <- string_empty?(description),
+             valid_date <- valid_date?(date),
+             date_empty? <- string_empty?(date) do
+          errors = []
+
+          errors = if not correct_first_blanks, do: errors ++ [:first_blank], else: errors
+
+          errors = if not correct_last_blanks, do: errors ++ [:last_blank], else: errors
+
+          errors = if not correct_mid_blanks, do: errors ++ [:mid_blank], else: errors
+
+          errors =
+            if reel_sequence_number_empty?, do: errors ++ [:reel_sequence_number], else: errors
+
+          errors = if bank_abbreviation_empty?, do: errors ++ [:bank_abbreviation], else: errors
+
+          errors =
+            if user_preferred_specification_empty?,
+              do: errors ++ [:user_preferred_specification],
+              else: errors
+
+          errors = if user_id_number_empty?, do: errors ++ [:user_id_number], else: errors
+
+          errors = if description_empty?, do: errors ++ [:description], else: errors
+
+          errors = if not valid_date or date_empty?, do: errors ++ [:date], else: errors
+
+          if(length(errors) > 0) do
+            {:error, :invalid_format, errors}
+          else
+            {:ok, reel_sequence_number, bank_abbreviation, user_preferred_specification,
+             user_id_number, description, date}
+          end
         end
       end
     end
