@@ -45,8 +45,12 @@ defmodule AbaFileValidatorTest do
       assert AbaFileValidator.validate_descriptive_record(entry) == :ok
     end
 
-    test "returns an error if incorrect length" do
-      assert AbaFileValidator.validate_descriptive_record("1") == {:error, :incorrect_length}
+    test "returns an error if incorrect length with correct starting code" do
+      assert AbaFileValidator.get_descriptive_record("0") == {:error, :incorrect_length}
+    end
+
+    test "returns an error if incorrect length with incorrect starting code" do
+      assert AbaFileValidator.get_descriptive_record("1") == {:error, :incorrect_length}
     end
 
     test "returns an error if incorrect starting code" do
@@ -62,6 +66,39 @@ defmodule AbaFileValidatorTest do
         "0                   CBA       test                      301500221212121227121222                                        "
 
       assert AbaFileValidator.validate_descriptive_record(entry) ==
+               {:error, :invalid_format}
+    end
+  end
+
+  describe "AbaFileValidator.get_descriptive_record/1" do
+    test "validates succesfully" do
+      entry =
+        "0                 01CBA       test                      301500221212121227121222                                        "
+
+      assert AbaFileValidator.get_descriptive_record(entry) == {:ok, "01", "CBA", "test                      ", "301500", "221212121227", "121222"}
+    end
+
+    test "returns an error if incorrect length with correct starting code" do
+      assert AbaFileValidator.get_descriptive_record("0") == {:error, :incorrect_length}
+    end
+
+    test "returns an error if incorrect length with incorrect starting code" do
+      assert AbaFileValidator.get_descriptive_record("1") == {:error, :incorrect_length}
+    end
+
+    test "returns an error if incorrect starting code" do
+      entry =
+        "1                 01CBA       test                      301500221212121227121222                                        "
+
+      assert AbaFileValidator.get_descriptive_record(entry) ==
+               {:error, :incorrect_starting_code}
+    end
+
+    test "returns an error if invalid string" do
+      entry =
+        "0                   CBA       test                      301500221212121227121222                                        "
+
+      assert AbaFileValidator.get_descriptive_record(entry) ==
                {:error, :invalid_format}
     end
   end
