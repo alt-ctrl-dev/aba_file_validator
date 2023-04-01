@@ -5,47 +5,6 @@ defmodule AbaFileValidator do
   Documentation for `AbaFileValidator`.
   """
 
-  @spec validate_descriptive_record(any) ::
-          :ok
-          | {:error,
-             :incorrect_length | :incorrect_starting_code | :invalid_format | :invalid_input}
-  @doc """
-  Validates the entry as a descriptive record
-
-  ## Examples
-
-      iex> AbaFileValidator.validate_descriptive_record(1)
-      {:error, :invalid_input}
-
-      iex> AbaFileValidator.validate_descriptive_record("11")
-      {:error, :incorrect_length}
-
-      iex> AbaFileValidator.validate_descriptive_record("01")
-      {:error, :incorrect_length}
-
-      iex> AbaFileValidator.validate_descriptive_record("1                 01CBA       test                      301500221212121227121222                                        ")
-      {:error, :incorrect_starting_code}
-
-      iex> AbaFileValidator.validate_descriptive_record("0                   CBA       test                      301500221212121227121222                                        ")
-      {:error, :invalid_format}
-
-      iex> AbaFileValidator.validate_descriptive_record("0                 01CBA       test                      301500221212121227121222                                        ")
-      :ok
-
-  """
-
-  def validate_descriptive_record(entry) when not is_binary(entry) do
-    {:error, :invalid_input}
-  end
-
-  def validate_descriptive_record(entry) do
-    get_descriptive_record(entry)
-    |> case do
-      {:ok, _, _, _, _, _, _} -> :ok
-      error -> error
-    end
-  end
-
   @spec get_descriptive_record(binary) ::
           {:error, :incorrect_length | :incorrect_starting_code | :invalid_format}
           | {:ok, binary(), binary(), binary(), binary(), binary(), binary()}
