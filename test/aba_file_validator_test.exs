@@ -42,7 +42,9 @@ defmodule AbaFileValidatorTest do
       entry =
         "0                 01CBA       test                      301500221212121227121222                                        "
 
-      assert AbaFileValidator.get_descriptive_record(entry) == {:ok, "01", "CBA", "test                      ", "301500", "221212121227", "121222"}
+      assert AbaFileValidator.get_descriptive_record(entry) ==
+               {:ok, "01", "CBA", "test                      ", "301500", "221212121227",
+                "121222"}
     end
 
     test "returns an error if incorrect length with correct starting code" do
@@ -66,7 +68,7 @@ defmodule AbaFileValidatorTest do
         "0                   CBA       test                      301500221212121227121222                                        "
 
       assert AbaFileValidator.get_descriptive_record(entry) ==
-               {:error, :invalid_format}
+               {:error, :invalid_format, [:reel_sequence_number]}
     end
   end
 end
