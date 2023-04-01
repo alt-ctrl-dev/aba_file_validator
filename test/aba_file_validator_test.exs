@@ -36,4 +36,13 @@ defmodule AbaFileValidatorTest do
     assert AbaFileValidator.get_transaction_code_description(57) == "Debenture/Note Interest"
     assert AbaFileValidator.get_transaction_code_description("57") == "Debenture/Note Interest"
   end
+
+  describe "validate descriptive record entry" do
+    test "descriptive record entry" do
+      entry =
+        "0                 01CBA       test                      301500221212121227121222                                        "
+
+      assert AbaFileValidator.validate_descriptive_record(entry) == :ok
+    end
+  end
 end
