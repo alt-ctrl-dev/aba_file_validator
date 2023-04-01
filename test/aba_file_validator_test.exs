@@ -56,5 +56,13 @@ defmodule AbaFileValidatorTest do
       assert AbaFileValidator.validate_descriptive_record(entry) ==
                {:error, :incorrect_starting_code}
     end
+
+    test "returns an error if invalid string" do
+      entry =
+        "0                   CBA       test                      301500221212121227121222                                        "
+
+      assert AbaFileValidator.validate_descriptive_record(entry) ==
+               {:error, :invalid_format}
+    end
   end
 end
