@@ -70,12 +70,21 @@ defmodule AbaFileValidatorTest do
       assert AbaFileValidator.get_descriptive_record(entry) ==
                {:error, :invalid_format, [:reel_sequence_number]}
     end
+
     test "returns an error if empty string" do
       entry =
         "0                                                                                                                       "
 
       assert AbaFileValidator.get_descriptive_record(entry) ==
-               {:error, :invalid_format}
+               {:error, :invalid_format,
+                [
+                  :reel_sequence_number,
+                  :bank_abbreviation,
+                  :user_preferred_specification,
+                  :user_id_number,
+                  :description,
+                  :date
+                ]}
     end
   end
 
@@ -84,7 +93,9 @@ defmodule AbaFileValidatorTest do
       entry =
         "7999-999            000000000000000353890000035389                        000002                                        "
 
-      assert AbaFileValidator.get_file_total_record(entry) == {:ok, "01", "CBA", "test                      ", "301500", "221212121227", "121222"}
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:ok, "01", "CBA", "test                      ", "301500", "221212121227",
+                "121222"}
     end
 
     test "returns an error if incorrect length with correct starting code" do
@@ -110,6 +121,7 @@ defmodule AbaFileValidatorTest do
       assert AbaFileValidator.get_file_total_record(entry) ==
                {:error, :invalid_format}
     end
+
     test "returns an error if empty string" do
       entry =
         "7                                                                                                                       "
