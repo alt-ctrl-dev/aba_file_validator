@@ -99,6 +99,114 @@ defmodule AbaFileValidator do
     end
   end
 
+  @doc """
+  Get the entries as part of the file total record
+
+  ## Examples
+
+      iex> AbaFileValidator.get_file_total_record(1)
+      {:error, :invalid_input}
+
+      iex> AbaFileValidator.get_file_total_record("11")
+      {:error, :incorrect_length}
+
+      iex> AbaFileValidator.get_file_total_record("01")
+      {:error, :incorrect_length}
+
+      iex> AbaFileValidator.get_file_total_record("1                 01CBA       test                      301500221212121227121222                                        ")
+      {:error, :incorrect_starting_code}
+
+      iex> AbaFileValidator.get_file_total_record("7999 999            000000000000000353890000035388                        000000                                        ")
+      {:error, :invalid_format, [:bsb_filler, :net_total_mismatch ]}
+
+      iex> AbaFileValidator.get_file_total_record("7                                                                                                                       ")
+      {:error, :invalid_format, [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}
+
+      iex> AbaFileValidator.get_file_total_record("7999 999            000000000000000353890000035388                        000002                                        ")
+      {:error, :invalid_format, [:bsb_filler, :net_total_mismatch, :records_mismatch]}
+
+      iex> AbaFileValidator.get_file_total_record("7999-999            000000000000000353890000035389                        000000                                        ")
+      {:ok, 0, 35389, 35389, 0}
+
+  """
+  def get_file_total_record(entry, records \\ 0)
+
+  def get_file_total_record(entry, _records) when not is_binary(entry) do
+    {:error, :invalid_input}
+  end
+
+  def get_file_total_record(entry, records) when is_number(records) do
+    if not correct_length?(entry, 120) do
+      {:error, :incorrect_length}
+    else
+      {code, entry} = String.split_at(entry, 1)
+
+      if code != "7" do
+        {:error, :incorrect_starting_code}
+      else
+        {bsb_filler, entry} = String.split_at(entry, 7)
+        {first_blank, entry} = String.split_at(entry, 12)
+        {net_total, entry} = String.split_at(entry, 10)
+        {total_credit, entry} = String.split_at(entry, 10)
+        {total_debit, entry} = String.split_at(entry, 10)
+        {mid_blank, entry} = String.split_at(entry, 24)
+        {record_count, last_blank} = String.split_at(entry, 6)
+
+        errors = []
+
+        errors = if bsb_filler !== "999-999", do: errors ++ [:bsb_filler], else: errors
+
+        errors =
+          if not correct_length?(first_blank, 12), do: errors ++ [:first_blank], else: errors
+
+        errors = if not correct_length?(last_blank, 40), do: errors ++ [:last_blank], else: errors
+
+        errors = if not correct_length?(mid_blank, 24), do: errors ++ [:mid_blank], else: errors
+
+        errors = if string_empty?(net_total), do: errors ++ [:net_total], else: errors
+
+        errors = if string_empty?(total_credit), do: errors ++ [:total_credit], else: errors
+
+        errors =
+          if string_empty?(total_debit),
+            do: errors ++ [:total_debit],
+            else: errors
+
+        errors = if string_empty?(record_count), do: errors ++ [:record_count], else: errors
+
+        errors =
+          unless string_empty?(net_total) and string_empty?(total_credit) and
+                   string_empty?(total_debit) do
+            net_amount = String.to_integer(net_total)
+            credit_amount = String.to_integer(total_credit)
+            debit_amount = String.to_integer(total_debit)
+
+            if net_amount !== credit_amount - debit_amount,
+              do: errors ++ [:net_total_mismatch],
+              else: errors
+          else
+            errors
+          end
+
+        errors =
+          unless string_empty?(record_count) do
+            if records !== String.to_integer(record_count),
+              do: errors ++ [:records_mismatch],
+              else: errors
+          else
+            errors
+          end
+
+        if(length(errors) > 0) do
+          {:error, :invalid_format, errors}
+        else
+          {:ok, String.to_integer(net_total), String.to_integer(total_credit),
+           String.to_integer(total_debit), String.to_integer(record_count)}
+        end
+      end
+    end
+  end
+
   @spec get_transaction_code_description(any) :: :error | binary()
   @doc """
   Get a description for a given transaction code

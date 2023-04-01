@@ -70,5 +70,80 @@ defmodule AbaFileValidatorTest do
       assert AbaFileValidator.get_descriptive_record(entry) ==
                {:error, :invalid_format, [:reel_sequence_number]}
     end
+
+    test "returns an error if empty string" do
+      entry =
+        "0                                                                                                                       "
+
+      assert AbaFileValidator.get_descriptive_record(entry) ==
+               {:error, :invalid_format,
+                [
+                  :reel_sequence_number,
+                  :bank_abbreviation,
+                  :user_preferred_specification,
+                  :user_id_number,
+                  :description,
+                  :date
+                ]}
+    end
+  end
+
+  describe "AbaFileValidator.get_file_total_record/1" do
+    test "validates succesfully" do
+      entry =
+        "7999-999            000000000000000353890000035389                        000000                                        "
+
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:ok, 0, 35389, 35389, 0}
+    end
+
+    test "returns an error if incorrect length with correct starting code" do
+      assert AbaFileValidator.get_file_total_record("7") == {:error, :incorrect_length}
+    end
+
+    test "returns an error if incorrect length with incorrect starting code" do
+      assert AbaFileValidator.get_file_total_record("1") == {:error, :incorrect_length}
+    end
+
+    test "returns an error if incorrect starting code" do
+      entry =
+        "1                 01CBA       test                      301500221212121227121222                                        "
+
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:error, :incorrect_starting_code}
+    end
+
+    test "returns an error if invalid string" do
+      entry =
+        "7999 999            000000000000000353890000035389                        000000                                        "
+
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:error, :invalid_format, [:bsb_filler]}
+    end
+
+    test "returns an error if empty string" do
+      entry =
+        "7                                                                                                                       "
+
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:error, :invalid_format,
+               [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}
+    end
+
+    test "returns an error if balance don't match" do
+      entry =
+        "7999 999            000000000000000353890000035388                        000000                                        "
+
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:error, :invalid_format, [:bsb_filler, :net_total_mismatch]}
+    end
+
+    test "returns an error if records don't match" do
+      entry =
+        "7999 999            000000000000000353890000035389                        000002                                        "
+
+      assert AbaFileValidator.get_file_total_record(entry) ==
+               {:error, :invalid_format, [:bsb_filler, :records_mismatch]}
+    end
   end
 end
