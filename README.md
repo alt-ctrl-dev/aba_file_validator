@@ -1,4 +1,4 @@
-# ABA File Validator
+# ABA Validator
 [![Unit tests](https://github.com/alt-ctrl-dev/aba_file_validator/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/alt-ctrl-dev/aba_file_validator/actions/workflows/ci.yml)
 
 ## Installation
