@@ -14,7 +14,7 @@ jobs:
     outputs:
       short_sha: ${{ steps.get.outputs.key }}
     env:
-      HEX_API_KEY: secret.HEX_API_KEY
+      HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
     steps:
       - name: Set output
         id: get
