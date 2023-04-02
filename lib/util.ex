@@ -1,4 +1,4 @@
-defmodule AbaFileValidator.Utils do
+defmodule AbaValidator.Utils do
   def correct_length?(entry, n) when is_binary(entry), do: String.length(entry) == n
 
   def string_empty?(entry) when is_binary(entry), do: String.trim(entry) |> String.length() == 0
