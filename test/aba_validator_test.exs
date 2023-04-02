@@ -43,8 +43,8 @@ defmodule AbaValidatorTest do
         "0                 01CBA       test                      301500221212121227121222                                        "
 
       assert AbaValidator.get_descriptive_record(entry) ==
-               {:ok, "01", "CBA", "test                      ", "301500", "221212121227",
-                "121222"}
+               {:ok, {"01", "CBA", "test                      ", "301500", "221212121227",
+                "121222"}}
     end
 
     test "returns an error if incorrect length with correct starting code" do
@@ -94,7 +94,7 @@ defmodule AbaValidatorTest do
         "7999-999            000000000000000353890000035389                        000000                                        "
 
       assert AbaValidator.get_file_total_record(entry) ==
-               {:ok, 0, 35389, 35389, 0}
+               {:ok, {0, 35389, 35389, 0}}
     end
 
     test "returns an error if incorrect length with correct starting code" do
@@ -153,15 +153,15 @@ defmodule AbaValidatorTest do
         "1032-898 12345678 130000035389 money                           Batch payment    040-404 12345678 test           00000000"
 
       assert AbaValidator.get_detail_record(entry) ==
-               {:ok, "032-898", "12345678", :blank, :externally_initiated_debit, 35389, " money",
-                " Batch payment", "040-404", "12345678", " test", 0}
+               {:ok, {"032-898", "12345678", :blank, :externally_initiated_debit, 35389, " money",
+                " Batch payment", "040-404", "12345678", " test", 0}}
 
       entry =
         "1032-8980-2345678N130000035389money                           Batch payment     040-404 12345678test            00000000"
 
       assert AbaValidator.get_detail_record(entry) ==
-               {:ok, "032-898", "0-2345678", :new_bank, :externally_initiated_debit, 35389,
-                "money", "Batch payment", "040-404", "12345678", "test", 0}
+               {:ok, {"032-898", "0-2345678", :new_bank, :externally_initiated_debit, 35389,
+                "money", "Batch payment", "040-404", "12345678", "test", 0}}
     end
 
     test "returns an error if incorrect length with correct starting code" do
