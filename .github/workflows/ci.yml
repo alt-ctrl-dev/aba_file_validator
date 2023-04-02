@@ -20,7 +20,7 @@ jobs:
             lint: lint
           
           - elixir: 1.0
-            otp: 20.2
+            otp: 17
             lint: lint
 
     runs-on: ubuntu-latest
