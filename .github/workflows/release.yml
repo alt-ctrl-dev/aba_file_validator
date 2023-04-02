@@ -8,24 +8,6 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  log:
-    runs-on: ubuntu-latest
-    name: Get key
-    outputs:
-      short_sha: ${{ steps.get.outputs.key }}
-    env:
-      HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
-    steps:
-      - name: Set output
-        id: get
-        run: echo "key=$HEX_API_KEY" >> $GITHUB_OUTPUT
-      - name: Check output
-        env:
-          RELEASE_VERSION: ${{ steps.get.outputs.key }}
-        run: |
-          echo $RELEASE_VERSION
-          echo ${{ steps.get.outputs.key }}
-
   publish_package:
     if: github.event_name == 'release'
     name: Publish to hex.pm
