@@ -1,9 +1,10 @@
 defmodule AbaFileValidator do
-  import __MODULE__.Utils, only: [correct_length?: 2, string_empty?: 1, valid_date?: 1]
+  import __MODULE__.Utils
 
   @moduledoc """
   Documentation for `AbaFileValidator`.
   """
+  alias Mix.Tasks.Compile.Yecc
 
   @spec get_descriptive_record(String.t()) ::
           {:error, :incorrect_length | :incorrect_starting_code | :invalid_format}
@@ -179,6 +180,7 @@ defmodule AbaFileValidator do
 
         errors = if not correct_length?(mid_blank, 24), do: errors ++ [:mid_blank], else: errors
 
+        # TODO Validate amount is positve
         errors = if string_empty?(net_total), do: errors ++ [:net_total], else: errors
 
         errors = if string_empty?(total_credit), do: errors ++ [:total_credit], else: errors
@@ -204,6 +206,7 @@ defmodule AbaFileValidator do
             errors
           end
 
+        # TODO Validate total amount from detail match debit/credit
         errors =
           unless string_empty?(record_count) do
             if records !== String.to_integer(record_count),
@@ -223,10 +226,148 @@ defmodule AbaFileValidator do
     end
   end
 
-  @spec get_transaction_code_description(String.t()) :: :error | String.t()
   @doc """
-  Get a description for a given transaction code
-  defp get_transaction_code("13"), do: :externally_initiated_debit;
+  Get the entries as part of the detail record
+
+  ## Examples
+
+      iex> AbaFileValidator.get_detail_record(1)
+      {:error, :invalid_input}
+
+      iex> AbaFileValidator.get_detail_record("11")
+      {:error, :incorrect_length}
+
+      iex> AbaFileValidator.get_detail_record("01")
+      {:error, :incorrect_length}
+
+      iex> AbaFileValidator.get_detail_record("1032 898 12345678 130000035389money                           Batch payment     040 404 12345678test            00000000")
+      {:error, :invalid_format, [:bsb,:trace_record]}
+
+      iex> AbaFileValidator.get_detail_record("1                                                                                                                       ")
+      {:error, :invalid_format,
+               [:bsb, :account_number, :transasction_code, :amount, :account_name, :reference, :trace_record, :trace_account_number, :remitter, :withheld_tax]}
+
+      iex> AbaFileValidator.get_detail_record("7999 999            000000000000000353890000035388                        000002                                        ")
+      {:error, :incorrect_starting_code}
+
+      iex> AbaFileValidator.get_detail_record("1032-898 12345678 130000035389 money                           Batch payment    040-404 12345678 test           00000000")
+      {:ok, "032-898", "12345678", :blank, :externally_initiated_debit, 35389, " money", " Batch payment","040-404", "12345678", " test", 0}
+
+      iex> AbaFileValidator.get_detail_record("1032-8980-2345678N130000035389money                           Batch payment     040-404 12345678test            00000000")
+      {:ok, "032-898", "0-2345678", :new_bank, :externally_initiated_debit, 35389, "money", "Batch payment","040-404", "12345678", "test", 0}
+
+  """
+  def get_detail_record(entry) when not is_binary(entry) do
+    {:error, :invalid_input}
+  end
+
+  def get_detail_record(entry) do
+    if not correct_length?(entry, 120) do
+      {:error, :incorrect_length}
+    else
+      {code, entry} = String.split_at(entry, 1)
+
+      if code != "1" do
+        {:error, :incorrect_starting_code}
+      else
+        {bsb, entry} = String.split_at(entry, 7)
+        {account_number, entry} = String.split_at(entry, 9)
+        {indicator, entry} = String.split_at(entry, 1)
+        {transasction_code, entry} = String.split_at(entry, 2)
+        {amount, entry} = String.split_at(entry, 10)
+        {account_name, entry} = String.split_at(entry, 32)
+        {reference, entry} = String.split_at(entry, 18)
+        {trace_record, entry} = String.split_at(entry, 7)
+        {trace_account_number, entry} = String.split_at(entry, 9)
+        {remitter_name, withheld_tax} = String.split_at(entry, 16)
+
+        reference = String.trim_trailing(reference)
+        trace_account_number = String.trim_leading(trace_account_number)
+        remitter_name = String.trim_trailing(remitter_name)
+        account_number = String.trim_leading(account_number)
+        account_name = String.trim_trailing(account_name)
+        errors = []
+
+        errors = if not valid_bsb?(bsb), do: errors ++ [:bsb], else: errors
+        errors = if string_empty?(account_number), do: errors ++ [:account_number], else: errors
+
+        errors =
+          if get_indicator_code(indicator) == :error, do: errors ++ [:indicator], else: errors
+
+        errors =
+          if get_transaction_code(transasction_code) == :error,
+            do: errors ++ [:transasction_code],
+            else: errors
+
+        errors = if Integer.parse(amount) == :error, do: errors ++ [:amount], else: errors
+        errors = if string_empty?(account_name), do: errors ++ [:account_name], else: errors
+        errors = if string_empty?(reference), do: errors ++ [:reference], else: errors
+        errors = if not valid_bsb?(trace_record), do: errors ++ [:trace_record], else: errors
+
+        errors =
+          if string_empty?(trace_account_number),
+            do: errors ++ [:trace_account_number],
+            else: errors
+
+        errors = if string_empty?(remitter_name), do: errors ++ [:remitter], else: errors
+
+        errors =
+          if Integer.parse(withheld_tax) == :error, do: errors ++ [:withheld_tax], else: errors
+
+        # errors =
+        #   if not correct_length?(first_blank, 12), do: errors ++ [:first_blank], else: errors
+
+        # errors = if not correct_length?(last_blank, 40), do: errors ++ [:last_blank], else: errors
+
+        # errors = if not correct_length?(mid_blank, 24), do: errors ++ [:mid_blank], else: errors
+
+        # errors = if string_empty?(net_total), do: errors ++ [:net_total], else: errors
+
+        # errors = if string_empty?(total_credit), do: errors ++ [:total_credit], else: errors
+
+        # errors =
+        #   if string_empty?(total_debit),
+        #     do: errors ++ [:total_debit],
+        #     else: errors
+
+        # errors = if string_empty?(record_count), do: errors ++ [:record_count], else: errors
+
+        # errors =
+        #   unless string_empty?(net_total) and string_empty?(total_credit) and
+        #            string_empty?(total_debit) do
+        #     net_amount = String.to_integer(net_total)
+        #     credit_amount = String.to_integer(total_credit)
+        #     debit_amount = String.to_integer(total_debit)
+
+        #     if net_amount !== credit_amount - debit_amount,
+        #       do: errors ++ [:net_total_mismatch],
+        #       else: errors
+        #   else
+        #     errors
+        #   end
+
+        # errors =
+        #   unless string_empty?(record_count) do
+        #     if records !== String.to_integer(record_count),
+        #       do: errors ++ [:records_mismatch],
+        #       else: errors
+        #   else
+        #     errors
+        #   end
+
+        if(length(errors) > 0) do
+          {:error, :invalid_format, errors}
+        else
+          {:ok, bsb, account_number, get_indicator_code(indicator),
+           get_transaction_code(transasction_code), String.to_integer(amount), account_name,
+           reference, trace_record, trace_account_number, remitter_name,
+           String.to_integer(withheld_tax)}
+        end
+      end
+    end
+  end
+
+  defp get_transaction_code("13"), do: :externally_initiated_debit
 
   defp get_transaction_code("50"),
     do: :externally_initiated_credit
@@ -240,7 +381,14 @@ defmodule AbaFileValidator do
   defp get_transaction_code("57"), do: :debenture_note_interest
   defp get_transaction_code(_), do: :error
 
-  @spec get_transaction_code_description(String.t()| integer() | atom()) :: :error | String.t()
+  defp get_indicator_code("N"), do: :new_bank
+  defp get_indicator_code("W"), do: :dividend_resident_country_double_tax
+  defp get_indicator_code("X"), do: :dividend_non_resident
+  defp get_indicator_code("Y"), do: :interest_non_residents
+  defp get_indicator_code(" "), do: :blank
+  defp get_indicator_code(_), do: :error
+
+  @spec get_transaction_code_description(String.t() | integer() | atom()) :: :error | String.t()
   @doc """
   Get a description for a given transaction code. See [here](https://www.cemtexaba.com/aba-format/cemtex-aba-file-format-details) for the possible transaction code
 
@@ -270,18 +418,24 @@ defmodule AbaFileValidator do
   """
   def get_transaction_code_description(13), do: "Externally initiated debit items"
   def get_transaction_code_description("13"), do: "Externally initiated debit items"
-  def get_transaction_code_description(:externally_initiated_debit), do: "Externally initiated debit items"
+
+  def get_transaction_code_description(:externally_initiated_debit),
+    do: "Externally initiated debit items"
 
   def get_transaction_code_description(50),
     do: "Externally initiated credit items with the exception of those bearing Transaction Codes"
+
   def get_transaction_code_description("50"),
     do: "Externally initiated credit items with the exception of those bearing Transaction Codes"
+
   def get_transaction_code_description(:externally_initiated_credit),
     do: "Externally initiated credit items with the exception of those bearing Transaction Codes"
 
   def get_transaction_code_description(51), do: "Australian Government Security Interest"
   def get_transaction_code_description("51"), do: "Australian Government Security Interest"
-  def get_transaction_code_description(:australian_government_security_interest), do: "Australian Government Security Interest"
+
+  def get_transaction_code_description(:australian_government_security_interest),
+    do: "Australian Government Security Interest"
 
   def get_transaction_code_description(52), do: "Family Allowance"
   def get_transaction_code_description("52"), do: "Family Allowance"

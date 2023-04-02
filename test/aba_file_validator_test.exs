@@ -197,11 +197,12 @@ defmodule AbaFileValidatorTest do
                 [
                   :bsb,
                   :account_number,
-                  :indicator,
+                  :transasction_code,
                   :amount,
                   :account_name,
                   :reference,
                   :trace_record,
+                  :trace_account_number,
                   :remitter,
                   :withheld_tax
                 ]}
