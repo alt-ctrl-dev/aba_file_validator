@@ -5,9 +5,6 @@ defmodule AbaValidator do
   Documentation for `AbaValidator`.
   """
 
-  @spec get_descriptive_record(String.t()) ::
-          {:error, :incorrect_length | :incorrect_starting_code | :invalid_format}
-          | {:ok, String.t(), String.t(), String.t(), String.t(), String.t(), String.t()}
   @doc """
   Get the entries as part of the descriptiive record
 
@@ -29,7 +26,7 @@ defmodule AbaValidator do
       {:error, :invalid_format, [:reel_sequence_number]}
 
       iex> AbaValidator.get_descriptive_record("0                 01CBA       test                      301500221212121227121222                                        ")
-      {:ok, "01", "CBA", "test                      ", "301500", "221212121227", "121222"}
+      {:ok, {"01", "CBA", "test                      ", "301500", "221212121227", "121222"}}
 
   """
   def get_descriptive_record(entry) when not is_binary(entry) do
@@ -91,30 +88,14 @@ defmodule AbaValidator do
           if(length(errors) > 0) do
             {:error, :invalid_format, errors}
           else
-            {:ok, reel_sequence_number, bank_abbreviation, user_preferred_specification,
-             user_id_number, description, date}
+            {:ok, {reel_sequence_number, bank_abbreviation, user_preferred_specification,
+             user_id_number, description, date}}
           end
         end
       end
     end
   end
 
-  @spec get_file_total_record(String.t(), integer()) ::
-          {:error, :incorrect_length | :incorrect_starting_code | :invalid_input}
-          | {:error, :invalid_format,
-             [
-               :bsb_filler
-               | :first_blank
-               | :last_blank
-               | :mid_blank
-               | :net_total
-               | :net_total_mismatch
-               | :record_count
-               | :records_mismatch
-               | :total_credit
-               | :total_debit
-             ]}
-          | {:ok, integer(), integer(), integer(), integer()}
   @doc """
   Get the entries as part of the file total record
 
@@ -142,7 +123,7 @@ defmodule AbaValidator do
       {:error, :invalid_format, [:bsb_filler, :net_total_mismatch, :records_mismatch]}
 
       iex> AbaValidator.get_file_total_record("7999-999            000000000000000353890000035389                        000000                                        ")
-      {:ok, 0, 35389, 35389, 0}
+      {:ok, {0, 35389, 35389, 0}}
 
   """
   def get_file_total_record(entry, records \\ 0)
@@ -218,8 +199,8 @@ defmodule AbaValidator do
         if(length(errors) > 0) do
           {:error, :invalid_format, errors}
         else
-          {:ok, String.to_integer(net_total), String.to_integer(total_credit),
-           String.to_integer(total_debit), String.to_integer(record_count)}
+          {:ok, {String.to_integer(net_total), String.to_integer(total_credit),
+           String.to_integer(total_debit), String.to_integer(record_count)}}
         end
       end
     end
@@ -250,10 +231,10 @@ defmodule AbaValidator do
       {:error, :incorrect_starting_code}
 
       iex> AbaValidator.get_detail_record("1032-898 12345678 130000035389 money                           Batch payment    040-404 12345678 test           00000000")
-      {:ok, "032-898", "12345678", :blank, :externally_initiated_debit, 35389, " money", " Batch payment","040-404", "12345678", " test", 0}
+      {:ok, {"032-898", "12345678", :blank, :externally_initiated_debit, 35389, " money", " Batch payment","040-404", "12345678", " test", 0}}
 
       iex> AbaValidator.get_detail_record("1032-8980-2345678N130000035389money                           Batch payment     040-404 12345678test            00000000")
-      {:ok, "032-898", "0-2345678", :new_bank, :externally_initiated_debit, 35389, "money", "Batch payment","040-404", "12345678", "test", 0}
+      {:ok, {"032-898", "0-2345678", :new_bank, :externally_initiated_debit, 35389, "money", "Batch payment","040-404", "12345678", "test", 0}}
 
   """
   def get_detail_record(entry) when not is_binary(entry) do
@@ -313,54 +294,13 @@ defmodule AbaValidator do
         errors =
           if Integer.parse(withheld_tax) == :error, do: errors ++ [:withheld_tax], else: errors
 
-        # errors =
-        #   if not correct_length?(first_blank, 12), do: errors ++ [:first_blank], else: errors
-
-        # errors = if not correct_length?(last_blank, 40), do: errors ++ [:last_blank], else: errors
-
-        # errors = if not correct_length?(mid_blank, 24), do: errors ++ [:mid_blank], else: errors
-
-        # errors = if string_empty?(net_total), do: errors ++ [:net_total], else: errors
-
-        # errors = if string_empty?(total_credit), do: errors ++ [:total_credit], else: errors
-
-        # errors =
-        #   if string_empty?(total_debit),
-        #     do: errors ++ [:total_debit],
-        #     else: errors
-
-        # errors = if string_empty?(record_count), do: errors ++ [:record_count], else: errors
-
-        # errors =
-        #   unless string_empty?(net_total) and string_empty?(total_credit) and
-        #            string_empty?(total_debit) do
-        #     net_amount = String.to_integer(net_total)
-        #     credit_amount = String.to_integer(total_credit)
-        #     debit_amount = String.to_integer(total_debit)
-
-        #     if net_amount !== credit_amount - debit_amount,
-        #       do: errors ++ [:net_total_mismatch],
-        #       else: errors
-        #   else
-        #     errors
-        #   end
-
-        # errors =
-        #   unless string_empty?(record_count) do
-        #     if records !== String.to_integer(record_count),
-        #       do: errors ++ [:records_mismatch],
-        #       else: errors
-        #   else
-        #     errors
-        #   end
-
         if(length(errors) > 0) do
           {:error, :invalid_format, errors}
         else
-          {:ok, bsb, account_number, get_indicator_code(indicator),
+          {:ok, {bsb, account_number, get_indicator_code(indicator),
            get_transaction_code(transasction_code), String.to_integer(amount), account_name,
            reference, trace_record, trace_account_number, remitter_name,
-           String.to_integer(withheld_tax)}
+           String.to_integer(withheld_tax)}}
         end
       end
     end
