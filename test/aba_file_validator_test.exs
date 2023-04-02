@@ -88,7 +88,7 @@ defmodule AbaFileValidatorTest do
     end
   end
 
-  describe "AbaFileValidator.get_file_total_record/1" do
+  describe "AbaFileValidator.get_file_total_record/2" do
     test "validates succesfully" do
       entry =
         "7999-999            000000000000000353890000035389                        000000                                        "
@@ -127,7 +127,7 @@ defmodule AbaFileValidatorTest do
 
       assert AbaFileValidator.get_file_total_record(entry) ==
                {:error, :invalid_format,
-               [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}
+                [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}
     end
 
     test "returns an error if balance don't match" do
@@ -144,6 +144,67 @@ defmodule AbaFileValidatorTest do
 
       assert AbaFileValidator.get_file_total_record(entry) ==
                {:error, :invalid_format, [:bsb_filler, :records_mismatch]}
+    end
+  end
+
+  describe "AbaFileValidator.get_detail_record/1" do
+    test "validates succesfully" do
+      entry =
+        "1032-898 12345678 130000035389 money                           Batch payment    040-404 12345678 test           00000000"
+
+      assert AbaFileValidator.get_detail_record(entry) ==
+               {:ok, "032-898", "12345678", :blank, :externally_initiated_debit, 35389, " money",
+                " Batch payment", "040-404", "12345678", " test", 0}
+
+      entry =
+        "1032-8980-2345678N130000035389money                           Batch payment     040-404 12345678test            00000000"
+
+      assert AbaFileValidator.get_detail_record(entry) ==
+               {:ok, "032-898", "0-2345678", :new_bank, :externally_initiated_debit, 35389,
+                "money", "Batch payment", "040-404", "12345678", "test", 0}
+    end
+
+    test "returns an error if incorrect length with correct starting code" do
+      assert AbaFileValidator.get_detail_record("1") == {:error, :incorrect_length}
+    end
+
+    test "returns an error if incorrect length with incorrect starting code" do
+      assert AbaFileValidator.get_detail_record("7") == {:error, :incorrect_length}
+    end
+
+    test "returns an error if incorrect starting code" do
+      entry =
+        "7032-898 12345678 130000035389money                           Batch payment     040-404 12345678test            00000000"
+
+      assert AbaFileValidator.get_detail_record(entry) ==
+               {:error, :incorrect_starting_code}
+    end
+
+    test "returns an error if invalid string" do
+      entry =
+        "1032 898 12345678 130000035389money                           Batch payment     040 404 12345678test            00000000"
+
+      assert AbaFileValidator.get_detail_record(entry) ==
+               {:error, :invalid_format, [:bsb, :trace_record]}
+    end
+
+    test "returns an error if empty string" do
+      entry =
+        "1                                                                                                                       "
+
+      assert AbaFileValidator.get_detail_record(entry) ==
+               {:error, :invalid_format,
+                [
+                  :bsb,
+                  :account_number,
+                  :indicator,
+                  :amount,
+                  :account_name,
+                  :reference,
+                  :trace_record,
+                  :remitter,
+                  :withheld_tax
+                ]}
     end
   end
 end
