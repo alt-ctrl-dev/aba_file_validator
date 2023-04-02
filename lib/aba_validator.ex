@@ -23,7 +23,7 @@ defmodule AbaValidator do
       {:error, :incorrect_starting_code}
 
       iex> AbaValidator.get_descriptive_record("0                   CBA       test                      301500221212121227121222                                        ")
-      {:error, :invalid_format, [:reel_sequence_number]}
+      {:error, {:invalid_format, [:reel_sequence_number]}}
 
       iex> AbaValidator.get_descriptive_record("0                 01CBA       test                      301500221212121227121222                                        ")
       {:ok, {"01", "CBA", "test                      ", "301500", "221212121227", "121222"}}
@@ -86,7 +86,7 @@ defmodule AbaValidator do
           errors = if not valid_date or date_empty?, do: errors ++ [:date], else: errors
 
           if(length(errors) > 0) do
-            {:error, :invalid_format, errors}
+            {:error, {:invalid_format, errors}}
           else
             {:ok, {reel_sequence_number, bank_abbreviation, user_preferred_specification,
              user_id_number, description, date}}
@@ -114,13 +114,13 @@ defmodule AbaValidator do
       {:error, :incorrect_starting_code}
 
       iex> AbaValidator.get_file_total_record("7999 999            000000000000000353890000035388                        000000                                        ")
-      {:error, :invalid_format, [:bsb_filler, :net_total_mismatch ]}
+      {:error, {:invalid_format, [:bsb_filler, :net_total_mismatch ]}}
 
       iex> AbaValidator.get_file_total_record("7                                                                                                                       ")
-      {:error, :invalid_format, [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}
+      {:error, {:invalid_format, [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}}
 
       iex> AbaValidator.get_file_total_record("7999 999            000000000000000353890000035388                        000002                                        ")
-      {:error, :invalid_format, [:bsb_filler, :net_total_mismatch, :records_mismatch]}
+      {:error, {:invalid_format, [:bsb_filler, :net_total_mismatch, :records_mismatch]}}
 
       iex> AbaValidator.get_file_total_record("7999-999            000000000000000353890000035389                        000000                                        ")
       {:ok, {0, 35389, 35389, 0}}
@@ -197,7 +197,7 @@ defmodule AbaValidator do
           end
 
         if(length(errors) > 0) do
-          {:error, :invalid_format, errors}
+          {:error, {:invalid_format, errors}}
         else
           {:ok, {String.to_integer(net_total), String.to_integer(total_credit),
            String.to_integer(total_debit), String.to_integer(record_count)}}
@@ -221,11 +221,11 @@ defmodule AbaValidator do
       {:error, :incorrect_length}
 
       iex> AbaValidator.get_detail_record("1032 898 12345678 130000035389money                           Batch payment     040 404 12345678test            00000000")
-      {:error, :invalid_format, [:bsb,:trace_record]}
+      {:error, {:invalid_format, [:bsb,:trace_record]}}
 
       iex> AbaValidator.get_detail_record("1                                                                                                                       ")
-      {:error, :invalid_format,
-               [:bsb, :account_number, :transasction_code, :amount, :account_name, :reference, :trace_record, :trace_account_number, :remitter, :withheld_tax]}
+      {:error, {:invalid_format,
+               [:bsb, :account_number, :transasction_code, :amount, :account_name, :reference, :trace_record, :trace_account_number, :remitter, :withheld_tax]}}
 
       iex> AbaValidator.get_detail_record("7999 999            000000000000000353890000035388                        000002                                        ")
       {:error, :incorrect_starting_code}
@@ -295,7 +295,7 @@ defmodule AbaValidator do
           if Integer.parse(withheld_tax) == :error, do: errors ++ [:withheld_tax], else: errors
 
         if(length(errors) > 0) do
-          {:error, :invalid_format, errors}
+          {:error, {:invalid_format, errors}}
         else
           {:ok, {bsb, account_number, get_indicator_code(indicator),
            get_transaction_code(transasction_code), String.to_integer(amount), account_name,

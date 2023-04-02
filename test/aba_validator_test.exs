@@ -68,7 +68,7 @@ defmodule AbaValidatorTest do
         "0                   CBA       test                      301500221212121227121222                                        "
 
       assert AbaValidator.get_descriptive_record(entry) ==
-               {:error, :invalid_format, [:reel_sequence_number]}
+               {:error, {:invalid_format, [:reel_sequence_number]}}
     end
 
     test "returns an error if empty string" do
@@ -76,7 +76,7 @@ defmodule AbaValidatorTest do
         "0                                                                                                                       "
 
       assert AbaValidator.get_descriptive_record(entry) ==
-               {:error, :invalid_format,
+               {:error, {:invalid_format,
                 [
                   :reel_sequence_number,
                   :bank_abbreviation,
@@ -84,7 +84,7 @@ defmodule AbaValidatorTest do
                   :user_id_number,
                   :description,
                   :date
-                ]}
+                ]}}
     end
   end
 
@@ -118,7 +118,7 @@ defmodule AbaValidatorTest do
         "7999 999            000000000000000353890000035389                        000000                                        "
 
       assert AbaValidator.get_file_total_record(entry) ==
-               {:error, :invalid_format, [:bsb_filler]}
+               {:error, {:invalid_format, [:bsb_filler]}}
     end
 
     test "returns an error if empty string" do
@@ -126,8 +126,8 @@ defmodule AbaValidatorTest do
         "7                                                                                                                       "
 
       assert AbaValidator.get_file_total_record(entry) ==
-               {:error, :invalid_format,
-                [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}
+               {:error, {:invalid_format,
+                [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}}
     end
 
     test "returns an error if balance don't match" do
@@ -135,7 +135,7 @@ defmodule AbaValidatorTest do
         "7999 999            000000000000000353890000035388                        000000                                        "
 
       assert AbaValidator.get_file_total_record(entry) ==
-               {:error, :invalid_format, [:bsb_filler, :net_total_mismatch]}
+               {:error, {:invalid_format, [:bsb_filler, :net_total_mismatch]}}
     end
 
     test "returns an error if records don't match" do
@@ -143,7 +143,7 @@ defmodule AbaValidatorTest do
         "7999 999            000000000000000353890000035389                        000002                                        "
 
       assert AbaValidator.get_file_total_record(entry) ==
-               {:error, :invalid_format, [:bsb_filler, :records_mismatch]}
+               {:error, {:invalid_format, [:bsb_filler, :records_mismatch]}}
     end
   end
 
@@ -185,7 +185,7 @@ defmodule AbaValidatorTest do
         "1032 898 12345678 130000035389money                           Batch payment     040 404 12345678test            00000000"
 
       assert AbaValidator.get_detail_record(entry) ==
-               {:error, :invalid_format, [:bsb, :trace_record]}
+               {:error, {:invalid_format, [:bsb, :trace_record]}}
     end
 
     test "returns an error if empty string" do
@@ -193,7 +193,7 @@ defmodule AbaValidatorTest do
         "1                                                                                                                       "
 
       assert AbaValidator.get_detail_record(entry) ==
-               {:error, :invalid_format,
+               {:error, {:invalid_format,
                 [
                   :bsb,
                   :account_number,
@@ -205,7 +205,7 @@ defmodule AbaValidatorTest do
                   :trace_account_number,
                   :remitter,
                   :withheld_tax
-                ]}
+                ]}}
     end
   end
 end
