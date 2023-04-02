@@ -8,6 +8,7 @@ defmodule AbaValidatorUtilsTest do
     assert correct_length?("13") == false
     assert correct_length?("13", 2) == true
     assert correct_length?("  ", 2) == true
+    assert correct_length?("", false) == :error
     assert correct_length?("") == true
   end
 

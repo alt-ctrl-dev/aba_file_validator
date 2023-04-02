@@ -1,8 +1,52 @@
 defmodule AbaValidator.Utils do
+
+  @moduledoc """
+  Documentation for `AbaValidator.Utils`.
+  """
+
+  @spec correct_length?(String.t(), integer()) :: :error | boolean()
+  @doc """
+  Checks if the length of the string matches to the defined 'n' value
+
+  ## Examples
+
+      iex> AbaValidator.Utils.correct_length?(1)
+      :error
+
+      iex> AbaValidator.Utils.correct_length?("", false)
+      :error
+
+      iex> AbaValidator.Utils.correct_length?("11")
+      false
+
+      iex> AbaValidator.Utils.correct_length?("01",2)
+      true
+
+      iex> AbaValidator.Utils.correct_length?(" " ,1 )
+      true
+
+  """
   def correct_length?(entry, n \\ 0)
-  def correct_length?(entry, _n) when not is_binary(entry), do: :error
+  def correct_length?(entry, n) when not is_binary(entry) or not is_integer(n), do: :error
   def correct_length?(entry, n) when is_binary(entry), do: String.length(entry) == n
 
+
+  @spec string_empty?(String.t()) :: :error | boolean()
+  @doc """
+  Checks if the string is empty
+
+  ## Examples
+
+      iex> AbaValidator.Utils.string_empty?(1)
+      :error
+
+      iex> AbaValidator.Utils.string_empty?("11")
+      false
+
+      iex> AbaValidator.Utils.string_empty?(" " )
+      true
+
+  """
   def string_empty?(entry) when not is_binary(entry), do: :error
   def string_empty?(entry) when is_binary(entry), do: String.trim(entry) |> String.length() == 0
 
@@ -25,7 +69,28 @@ defmodule AbaValidator.Utils do
 
   def valid_date?(_bsb), do: :error
 
-  @spec valid_bsb?(String.t()) :: boolean() | :error
+  @spec valid_bsb?(String.t()) :: boolean()
+  @doc """
+  Checks if the string is a valid bsb format
+
+  ## Examples
+
+      iex> AbaValidator.Utils.valid_bsb?(1)
+      false
+
+      iex> AbaValidator.Utils.valid_bsb?("123 231")
+      false
+
+      iex> AbaValidator.Utils.valid_bsb?("123-2a1")
+      false
+
+      iex> AbaValidator.Utils.valid_bsb?("11")
+      false
+
+      iex> AbaValidator.Utils.valid_bsb?("123-312" )
+      true
+
+  """
   def valid_bsb?(<<first::binary-3, <<45>>, last::binary-3>>) do
     cond do
       string_empty?(first) or
