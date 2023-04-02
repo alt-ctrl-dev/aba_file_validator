@@ -1,5 +1,7 @@
 # ABA Validator
-[![Unit tests](https://github.com/alt-ctrl-dev/aba_file_validator/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/alt-ctrl-dev/aba_file_validator/actions/workflows/ci.yml)
+[![Unit tests](https://github.com/alt-ctrl-dev/aba_validator/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/alt-ctrl-dev/aba_validator/actions/workflows/ci.yml)
+[![Hex](https://img.shields.io/hexpm/v/aba_validator?color=blue)](https://hex.pm/packages/aba_validator)
+
 
 ## Installation
 
