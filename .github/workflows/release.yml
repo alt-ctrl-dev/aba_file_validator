@@ -3,11 +3,11 @@ name: Auto release package
 on:
   workflow_dispatch:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+"
   release:
     types: [published]
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   publish_package:
@@ -17,21 +17,22 @@ jobs:
       HEX_API_KEY: ${{secrets.HEX_API_KEY}}
 
     steps:
-    - name: Checkout
-      uses: echo ${{github.ref_name}}
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        run: echo ${{github.ref_name}}
 
-    - name: Add release version to VERSION.txt
-      run: echo ${{ github.ref_name }} > VERSION.txt
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Set up Elixir
-      uses: erlef/setup-beam@v1
-      with:
-        elixir-version: 1.14
-        otp-version: 24.2
-    - name: Install dependencies
-      run: mix deps.get 
-      
-    - name: Publish package
-      run: mix hex.publish --yes
+      - name: Add release version to VERSION.txt
+        run: echo ${{ github.ref_name }} > VERSION.txt
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: 1.14
+          otp-version: 24.2
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Publish package
+        run: mix hex.publish --yes
