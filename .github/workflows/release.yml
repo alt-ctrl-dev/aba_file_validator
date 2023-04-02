@@ -11,13 +11,14 @@ on:
 
 jobs:
   publish_package:
-    if: github.ref_name == 'tag'
     name: Publish to hex.pm
     runs-on: ubuntu-latest
     env:
       HEX_API_KEY: ${{secrets.HEX_API_KEY}}
 
     steps:
+    - name: Checkout
+      uses: echo ${{github.ref_name}}
     - name: Checkout
       uses: actions/checkout@v3
 
