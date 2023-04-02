@@ -1,9 +1,12 @@
 defmodule AbaValidator.Utils do
+  def correct_length?(entry, n \\ 0)
+  def correct_length?(entry, _n) when not is_binary(entry), do: :error
   def correct_length?(entry, n) when is_binary(entry), do: String.length(entry) == n
 
+  def string_empty?(entry) when not is_binary(entry), do: :error
   def string_empty?(entry) when is_binary(entry), do: String.trim(entry) |> String.length() == 0
 
-  @spec valid_date?(String.t()) :: boolean
+  @spec valid_date?(String.t()) :: boolean() | :error
   def valid_date?(<<dd::binary-2, mm::binary-2, yy::binary-2>>) do
     if string_empty?(dd) or
          string_empty?(mm) or
@@ -20,7 +23,9 @@ defmodule AbaValidator.Utils do
     end
   end
 
-  @spec valid_bsb?(String.t()) :: boolean
+  def valid_date?(_bsb), do: :error
+
+  @spec valid_bsb?(String.t()) :: boolean() | :error
   def valid_bsb?(<<first::binary-3, <<45>>, last::binary-3>>) do
     cond do
       string_empty?(first) or
@@ -30,7 +35,13 @@ defmodule AbaValidator.Utils do
       Integer.parse(first) === :error ->
         false
 
+      String.match?(first, ~r/\d{3}/) === false ->
+        false
+
       Integer.parse(last) === :error ->
+        false
+
+      String.match?(last, ~r/\d{3}/) === false ->
         false
 
       true ->
