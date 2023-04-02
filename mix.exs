@@ -6,17 +6,18 @@ defmodule AbaValidator.MixProject do
   def project do
     [
       app: :aba_validator,
-      version: "VERSION.txt" |> File.read!() |> String.trim() || "0.0.0",
+      version: get_version(),
       elixir: "~> 1.14",
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
       deps: deps(),
       name: "ABA Validator",
       source_url: @github_link,
       docs: [
-        main: "Aba Validator", # The main page in the docs
+        # The main page in the docs
+        main: "Aba Validator",
         extras: ["README.md"]
       ]
     ]
@@ -38,6 +39,15 @@ defmodule AbaValidator.MixProject do
 
   defp description() do
     "an Elixir library to validate an Australian Banking Association (ABA) file"
+  end
+
+  defp get_version() do
+    File.read(".version")
+    |> case do
+      {:error, _} -> "0.0.0"
+      value -> value
+    end
+    |> String.trim()
   end
 
   defp package() do
