@@ -226,38 +226,86 @@ defmodule AbaFileValidator do
   @spec get_transaction_code_description(String.t()) :: :error | String.t()
   @doc """
   Get a description for a given transaction code
+  defp get_transaction_code("13"), do: :externally_initiated_debit;
+
+  defp get_transaction_code("50"),
+    do: :externally_initiated_credit
+
+  defp get_transaction_code("51"), do: :australian_government_security_interest
+  defp get_transaction_code("52"), do: :family_allowance
+  defp get_transaction_code("53"), do: :pay
+  defp get_transaction_code("54"), do: :pension
+  defp get_transaction_code("55"), do: :allotment
+  defp get_transaction_code("56"), do: :dividend
+  defp get_transaction_code("57"), do: :debenture_note_interest
+  defp get_transaction_code(_), do: :error
+
+  @spec get_transaction_code_description(String.t()| integer() | atom()) :: :error | String.t()
+  @doc """
+  Get a description for a given transaction code. See [here](https://www.cemtexaba.com/aba-format/cemtex-aba-file-format-details) for the possible transaction code
+
+  The following atoms are valid inputs:
+    - :allotment
+    - :australian_government_security_interest
+    - :debenture_note_interest
+    - :dividend
+    - :error
+    - :externally_initiated_credit
+    - :externally_initiated_debit
+    - :family_allowance
+    - :pay
+    - :pension
 
   ## Examples
 
       iex> AbaFileValidator.get_transaction_code_description("11")
       :error
 
-      iex> AbaFileValidator.get_transaction_code_description(13)
-      "Externally initiated debit items"
+      iex> AbaFileValidator.get_transaction_code_description(53)
+      "Pay"
+
+      iex> AbaFileValidator.get_transaction_code_description(:australian_government_security_interest)
+      "Australian Government Security Interest"
 
   """
   def get_transaction_code_description(13), do: "Externally initiated debit items"
   def get_transaction_code_description("13"), do: "Externally initiated debit items"
+  def get_transaction_code_description(:externally_initiated_debit), do: "Externally initiated debit items"
 
   def get_transaction_code_description(50),
     do: "Externally initiated credit items with the exception of those bearing Transaction Codes"
-
   def get_transaction_code_description("50"),
+    do: "Externally initiated credit items with the exception of those bearing Transaction Codes"
+  def get_transaction_code_description(:externally_initiated_credit),
     do: "Externally initiated credit items with the exception of those bearing Transaction Codes"
 
   def get_transaction_code_description(51), do: "Australian Government Security Interest"
   def get_transaction_code_description("51"), do: "Australian Government Security Interest"
+  def get_transaction_code_description(:australian_government_security_interest), do: "Australian Government Security Interest"
+
   def get_transaction_code_description(52), do: "Family Allowance"
   def get_transaction_code_description("52"), do: "Family Allowance"
+  def get_transaction_code_description(:family_allowance), do: "Family Allowance"
+
   def get_transaction_code_description(53), do: "Pay"
   def get_transaction_code_description("53"), do: "Pay"
+  def get_transaction_code_description(:pay), do: "Pay"
+
   def get_transaction_code_description(54), do: "Pension"
   def get_transaction_code_description("54"), do: "Pension"
+  def get_transaction_code_description(:pension), do: "Pension"
+
   def get_transaction_code_description(55), do: "Allotment"
   def get_transaction_code_description("55"), do: "Allotment"
+  def get_transaction_code_description(:allotment), do: "Allotment"
+
   def get_transaction_code_description(56), do: "Dividend"
   def get_transaction_code_description("56"), do: "Dividend"
+  def get_transaction_code_description(:dividend), do: "Dividend"
+
   def get_transaction_code_description(57), do: "Debenture/Note Interest"
   def get_transaction_code_description("57"), do: "Debenture/Note Interest"
+  def get_transaction_code_description(:debenture_note_interest), do: "Debenture/Note Interest"
+
   def get_transaction_code_description(_), do: :error
 end
