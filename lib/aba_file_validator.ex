@@ -5,9 +5,9 @@ defmodule AbaFileValidator do
   Documentation for `AbaFileValidator`.
   """
 
-  @spec get_descriptive_record(binary) ::
+  @spec get_descriptive_record(String.t()) ::
           {:error, :incorrect_length | :incorrect_starting_code | :invalid_format}
-          | {:ok, binary(), binary(), binary(), binary(), binary(), binary()}
+          | {:ok, String.t(), String.t(), String.t(), String.t(), String.t(), String.t()}
   @doc """
   Get the entries as part of the descriptiive record
 
@@ -99,6 +99,22 @@ defmodule AbaFileValidator do
     end
   end
 
+  @spec get_file_total_record(String.t(), integer()) ::
+          {:error, :incorrect_length | :incorrect_starting_code | :invalid_input}
+          | {:error, :invalid_format,
+             [
+               :bsb_filler
+               | :first_blank
+               | :last_blank
+               | :mid_blank
+               | :net_total
+               | :net_total_mismatch
+               | :record_count
+               | :records_mismatch
+               | :total_credit
+               | :total_debit
+             ]}
+          | {:ok, integer(), integer(), integer(), integer()}
   @doc """
   Get the entries as part of the file total record
 
@@ -207,7 +223,7 @@ defmodule AbaFileValidator do
     end
   end
 
-  @spec get_transaction_code_description(any) :: :error | binary()
+  @spec get_transaction_code_description(String.t()) :: :error | String.t()
   @doc """
   Get a description for a given transaction code
 
