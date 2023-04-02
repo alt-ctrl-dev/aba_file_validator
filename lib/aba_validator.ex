@@ -4,6 +4,95 @@ defmodule AbaValidator do
   @moduledoc """
   Documentation for `AbaValidator`.
   """
+  @doc """
+  Reads a file and validates it as an ABA file.
+
+  Returns:
+  [
+  {:descriptive_record, :ok,
+   {"01", "CBA", "test                      ", "301500", "221212121227",
+    "121222"}},
+  {:detail_record, :ok,
+   {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
+    "4dd86..4936b", "Return", "040-404", "12345678", "test", 0}},
+  {:detail_record, :error, {:invalid_format, [:bsb]}, 3},
+  {:file_total_record, [output: {0, 35389, 35389, 2}]}
+  ]
+
+  This will raise an exception if there are multiple descriptive or file records
+  """
+  def validate_aba_file!(file_path) when is_binary(file_path) do
+    File.stream!(file_path)
+    |> Stream.with_index(1)
+    |> Stream.transform({0, 0, 0, false, false}, fn
+      {line, index},
+      {description_count, detail_count, file_count, description_proceed?, file_record_processed?} ->
+        determine_record_type(line)
+        |> case do
+          :error ->
+            {:halt, -1}
+
+          :description ->
+            if description_proceed? do
+              raise "Line #{index}: Multiple description records in file"
+            end
+
+            {process_aba_contents(line, index),
+             {description_count + 1, detail_count, file_count, true, file_record_processed?}}
+
+          :detail ->
+            {process_aba_contents(line, index),
+             {description_count, detail_count + 1, file_count, description_proceed?,
+              file_record_processed?}}
+
+          :file_total ->
+            if file_record_processed? do
+              raise "Line #{index}: Multiple file total records in file"
+            end
+
+            {process_aba_contents(line, detail_count),
+             {description_count, detail_count, file_count + 1, description_proceed?, true}}
+        end
+    end)
+    |> Enum.to_list()
+  end
+
+  defp determine_record_type("0" <> _), do: :description
+  defp determine_record_type("1" <> _), do: :detail
+  defp determine_record_type("7" <> _), do: :file_total
+  defp determine_record_type(_), do: :error
+
+  defp process_aba_contents("0" <> _ = line, _index) do
+    String.trim(line, "\n")
+    |> get_descriptive_record()
+    |> case do
+      {:ok, output} -> [{:descriptive_record, :ok, output}]
+      {:error, error} -> [{:descriptive_record, :error, error}]
+    end
+  end
+
+  defp process_aba_contents("1" <> _ = line, index) do
+    String.trim(line, "\n")
+    |> get_detail_record()
+    |> case do
+      {:ok, output} -> [{:detail_record, :ok, output}]
+      {:error, error} -> [{:detail_record, :error, error, index}]
+    end
+  end
+
+  defp process_aba_contents("7" <> _ = line, count) do
+    String.trim(line, "\n")
+    |> get_file_total_record(count)
+    |> case do
+      {:ok, output} -> [{:file_total_record, output: output}]
+      {:error, error} -> [{:file_total_record, :error, error}]
+    end
+  end
+
+  def process_aba_contents(line) do
+    IO.inspect(line, label: "")
+    {:error}
+  end
 
   @doc """
   Get the entries as part of the descriptiive record
@@ -88,8 +177,9 @@ defmodule AbaValidator do
           if(length(errors) > 0) do
             {:error, {:invalid_format, errors}}
           else
-            {:ok, {reel_sequence_number, bank_abbreviation, user_preferred_specification,
-             user_id_number, description, date}}
+            {:ok,
+             {reel_sequence_number, bank_abbreviation, user_preferred_specification,
+              user_id_number, description, date}}
           end
         end
       end
@@ -199,8 +289,9 @@ defmodule AbaValidator do
         if(length(errors) > 0) do
           {:error, {:invalid_format, errors}}
         else
-          {:ok, {String.to_integer(net_total), String.to_integer(total_credit),
-           String.to_integer(total_debit), String.to_integer(record_count)}}
+          {:ok,
+           {String.to_integer(net_total), String.to_integer(total_credit),
+            String.to_integer(total_debit), String.to_integer(record_count)}}
         end
       end
     end
@@ -297,10 +388,11 @@ defmodule AbaValidator do
         if(length(errors) > 0) do
           {:error, {:invalid_format, errors}}
         else
-          {:ok, {bsb, account_number, get_indicator_code(indicator),
-           get_transaction_code(transasction_code), String.to_integer(amount), account_name,
-           reference, trace_record, trace_account_number, remitter_name,
-           String.to_integer(withheld_tax)}}
+          {:ok,
+           {bsb, account_number, get_indicator_code(indicator),
+            get_transaction_code(transasction_code), String.to_integer(amount), account_name,
+            reference, trace_record, trace_account_number, remitter_name,
+            String.to_integer(withheld_tax)}}
         end
       end
     end
