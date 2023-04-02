@@ -1,7 +1,6 @@
-name: Release package
+name: Auto release package
 
 on:
-  workflow_dispatch:
   release:
     types: [published]
     tags:
@@ -25,8 +24,10 @@ jobs:
     - name: Set up Elixir
       uses: erlef/setup-beam@v1
       with:
-        elixir-version: 1.0
+        elixir-version: 1.14
         otp-version: 24.2
-
+    - name: Install dependencies
+      run: mix deps.get 
+      
     - name: Publish package
       run: mix hex.publish --yes
