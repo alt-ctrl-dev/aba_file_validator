@@ -14,7 +14,11 @@ defmodule AbaValidator.MixProject do
       package: package(),
       deps: deps(),
       name: "ABA Validator",
-      source_url: @github_link
+      source_url: @github_link,
+      docs: [
+        main: "Aba Validator", # The main page in the docs
+        extras: ["README.md"]
+      ]
     ]
   end
 
