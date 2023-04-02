@@ -11,6 +11,7 @@ on:
 
 jobs:
   publish_package:
+    if: github.ref_name == 'tag'
     name: Publish to hex.pm
     runs-on: ubuntu-latest
     env:
