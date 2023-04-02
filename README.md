@@ -22,3 +22,6 @@ be found at <https://hexdocs.pm/aba_validator>.
 ## About
 ABA File validator is an Elixir library to validate an Australian Banking Association (ABA) file.
 An Australian Banking Association (ABA) file is a standard of file used by Australian Banks to make multiple payments for uploading data to Internet Banking systems. Read more [here](https://www.anz.com.au/support/internet-banking/getting-started/glossary/#aba_file)
+
+## TODO
+[] - more validation (currently the business logic is good enough, but it does not have dependent checks, e.g. if detail record has credits to Employee Benefits Card accounts, then Account Number field must always be 999999)
