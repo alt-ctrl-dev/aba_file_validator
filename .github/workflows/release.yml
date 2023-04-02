@@ -31,7 +31,7 @@ jobs:
     name: Publish to hex.pm
     runs-on: ubuntu-latest
     env:
-      HEX_API_KEY: ${{secret.HEX_API_KEY}}
+      HEX_API_KEY: ${{secrets.HEX_API_KEY}}
 
     steps:
     - name: Checkout
