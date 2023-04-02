@@ -25,3 +25,4 @@ An Australian Banking Association (ABA) file is a standard of file used by Austr
 
 ## TODO
 [] - more validation (currently the business logic is good enough, but it does not have dependent checks, e.g. if detail record has credits to Employee Benefits Card accounts, then Account Number field must always be 999999)
+[] - Add file parser
