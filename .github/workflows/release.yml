@@ -15,24 +15,20 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HEX_API_KEY: ${{secrets.HEX_API_KEY}}
+      PACKAGE_VERSION: ${{ github.ref_name }}
 
     steps:
       - name: Checkout
-        run: echo ${{github.ref_name}}
-
-      - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Add release version to VERSION.txt
-        run: echo ${{ github.ref_name }} > VERSION.txt
 
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
           elixir-version: 1.14
           otp-version: 24.2
+
       - name: Install dependencies
         run: mix deps.get
 
-      - name: Publish package
+      - name: Publishing package v${{ github.ref_name }}
         run: mix hex.publish --yes
