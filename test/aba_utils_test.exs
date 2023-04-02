@@ -29,4 +29,12 @@ defmodule AbaValidatorUtilsTest do
     assert  valid_bsb?("123-1s1") == false
     assert  valid_bsb?("a13-231") == false
   end
+
+  test "valid_date?/2" do
+    assert  valid_date?(11) == :error
+    assert  valid_date?("13") == :error
+    assert  valid_date?("  ") == :error
+    assert  valid_date?("123231") == false
+    assert  valid_date?("120423") == true
+  end
 end
