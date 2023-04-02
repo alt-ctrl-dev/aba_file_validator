@@ -7,7 +7,7 @@ defmodule AbaValidator.MixProject do
     [
       app: :aba_validator,
       version: "1.0.0",
-      elixir: "~> 1.0",
+      elixir: "~> 1.14",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       description: description(),

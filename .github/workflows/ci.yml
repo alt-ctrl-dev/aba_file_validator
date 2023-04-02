@@ -18,12 +18,8 @@ jobs:
           - elixir: 1.14
             otp: 24.2
             lint: lint
-          
-          - elixir: 1.0
-            otp: 17
-            lint: lint
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Install inotify-tools
