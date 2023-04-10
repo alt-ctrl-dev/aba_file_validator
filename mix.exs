@@ -42,12 +42,7 @@ defmodule AbaValidator.MixProject do
   end
 
   defp get_version() do
-    System.get_env("PACKAGE_VERSION")
-    |> case do
-      nil -> "0.0.0"
-      value -> value
-    end
-    |> String.trim()
+    "1.0.0"
   end
 
   defp package() do
