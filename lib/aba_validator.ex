@@ -85,9 +85,8 @@ defmodule AbaValidator do
     end
   end
 
-  def process_aba_contents(line) do
-    IO.inspect(line, label: "")
-    {:error}
+  defp process_aba_contents(_line, _count) do
+    :error
   end
 
   @doc """
