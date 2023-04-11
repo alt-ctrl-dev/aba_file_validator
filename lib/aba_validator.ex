@@ -26,7 +26,7 @@ defmodule AbaValidator do
         determine_record_type(line)
         |> case do
           :error ->
-            {:halt, -1}
+            {:halt, :error}
 
           :description ->
             if description_proceed? do
