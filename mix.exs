@@ -42,7 +42,7 @@ defmodule AbaValidator.MixProject do
   end
 
   defp get_version() do
-    "1.0.0"
+    "1.0.1"
   end
 
   defp package() do
