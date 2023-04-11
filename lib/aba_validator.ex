@@ -8,16 +8,12 @@ defmodule AbaValidator do
   Reads a file and validates it as an ABA file.
 
   Returns:
-  [
-  {:descriptive_record, :ok,
-   {"01", "CBA", "test                      ", "301500", "221212121227",
-    "121222"}},
-  {:detail_record, :ok,
-   {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
-    "4dd86..4936b", "Return", "040-404", "12345678", "test", 0}},
-  {:detail_record, :error, {:invalid_format, [:bsb]}, 3},
-  {:file_total_record, [output: {0, 35389, 35389, 2}]}
-  ]
+  {
+  {"01", "CBA", "test                      ", "301500", "221212121227", "121222"},
+  [{"040-440", "123456", :blank, :externally_initiated_credit, 35389, "4dd86..4936b", "Return", "040-404", "12345678", "test", 0}
+  ],
+  {0, 35389, 35389, 2}
+  }
 
   This will raise an exception if there are multiple descriptive or file records
   """
