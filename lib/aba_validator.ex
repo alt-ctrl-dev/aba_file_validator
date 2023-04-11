@@ -6,8 +6,10 @@ defmodule AbaValidator do
   """
   @doc """
   Reads a file and validates it as an ABA file.
+  This will raise an exception if there are multiple descriptive or file records
 
-  Returns:
+  ## Examples
+  iex> AbaValidator.validate_aba_file!("./test/helper/test.aba")
   {
   {"01", "CBA", "test                      ", "301500", "221212121227", "121222"},
   [{"040-440", "123456", :blank, :externally_initiated_credit, 35389, "4dd86..4936b", "Return", "040-404", "12345678", "test", 0}
@@ -15,7 +17,7 @@ defmodule AbaValidator do
   {0, 35389, 35389, 2}
   }
 
-  This will raise an exception if there are multiple descriptive or file records
+
   """
   def validate_aba_file!(file_path) when is_binary(file_path) do
     File.stream!(file_path)
