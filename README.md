@@ -11,7 +11,7 @@ by adding `aba_validator` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:aba_validator, "~> 1.0.1"}
+    {:aba_validator, "~> 1.1.0"}
   ]
 end
 ```
