@@ -236,7 +236,12 @@ defmodule AbaValidatorTest do
       entry = "./test/helper/test1.aba"
 
       assert AbaValidator.process_aba_file(entry) ==
-        [{:descriptive_record, :error, :incorrect_length}, {:detail_record, :error, {:invalid_format, [:bsb]}, 2}, {:detail_record, :error, :incorrect_length, 3}, {:file_total_record, :error, {:invalid_format, [:bsb_filler, :records_mismatch]}}]
+               [
+                 {:descriptive_record, :error, :incorrect_length},
+                 {:detail_record, :error, {:invalid_format, [:bsb]}, 2},
+                 {:detail_record, :error, :incorrect_length, 3},
+                 {:file_total_record, :error, {:invalid_format, [:bsb_filler, :records_mismatch]}}
+               ]
     end
 
     test "succesfully provides error if file doesn't exist" do

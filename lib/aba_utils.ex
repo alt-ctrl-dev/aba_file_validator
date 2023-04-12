@@ -46,7 +46,6 @@ defmodule AbaValidator.Utils do
   def string_empty?(entry) when not is_binary(entry), do: :error
   def string_empty?(entry) when is_binary(entry), do: String.trim(entry) |> String.length() == 0
 
-
   @spec valid_date?(String.t(), String.t()) :: :error | boolean()
   @doc """
   Checks if the date string is valid. If a year prefix is not provided then it will consider it as first two digits of the current year
@@ -71,21 +70,24 @@ defmodule AbaValidator.Utils do
       iex> AbaValidator.Utils.valid_date?("120423")
       true
   """
-  def valid_date?(date, year_prefix\\"")
-  def valid_date?(<<dd::binary-2, mm::binary-2, yy::binary-2>> = date, year_prefix) when is_binary(date) and is_binary(year_prefix) do
+  def valid_date?(date, year_prefix \\ "")
+
+  def valid_date?(<<dd::binary-2, mm::binary-2, yy::binary-2>> = date, year_prefix)
+      when is_binary(date) and is_binary(year_prefix) do
     if string_empty?(dd) or
          string_empty?(mm) or
          string_empty?(yy) do
       false
     else
-      year_prefix = if String.trim(year_prefix)|>String.length() === 0 do
-        <<prefix::binary-2, _::binary-2>> =Integer.to_string(NaiveDateTime.utc_now().year)
-        prefix
-      else
-        year_prefix
-      end
+      year_prefix =
+        if String.trim(year_prefix) |> String.length() === 0 do
+          <<prefix::binary-2, _::binary-2>> = Integer.to_string(NaiveDateTime.utc_now().year)
+          prefix
+        else
+          year_prefix
+        end
 
-      [yy, mm, dd] = for i <- [year_prefix<>yy, mm, dd], do: String.to_integer(i)
+      [yy, mm, dd] = for i <- [year_prefix <> yy, mm, dd], do: String.to_integer(i)
 
       NaiveDateTime.new(2000 + yy, mm, dd, 0, 0, 0)
       |> case do
