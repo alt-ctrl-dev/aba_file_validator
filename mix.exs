@@ -18,6 +18,7 @@ defmodule AbaValidator.MixProject do
       source_url: @github_link,
       docs: [
         # The main page in the docs
+        main: "readme",
         extras: ["README.md"]
       ]
     ]
