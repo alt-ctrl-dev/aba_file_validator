@@ -1,7 +1,5 @@
 defmodule AbaValidator.Utils do
-  @moduledoc """
-  Documentation for `AbaValidator.Utils`.
-  """
+  @moduledoc false
 
   @spec correct_length?(String.t(), integer()) :: :error | boolean()
   @doc """
