@@ -26,5 +26,8 @@ jobs:
       - name: Install dependencies
         run: mix deps.get
 
+      - name: Create docs
+        run: mix docs
+
       - name: Publishing package v${{ github.ref_name }}
         run: mix hex.publish --yes
