@@ -215,7 +215,7 @@ defmodule AbaValidatorTest do
   end
 
   describe "AbaValidator.process_aba_file/1" do
-    test "validates succesfully" do
+    test "succesfully returns the correct content" do
       entry = "./test/helper/test.aba"
 
       assert AbaValidator.process_aba_file(entry) ==
@@ -230,23 +230,16 @@ defmodule AbaValidatorTest do
                    "Fake payment", "040-404", "12345678", "test", 0}},
                  {:file_total_record, :output, {0, 35389, 35389, 2}}
                ]
+    end
 
+    test "succesfully gets errors" do
       entry = "./test/helper/test1.aba"
 
       assert AbaValidator.process_aba_file(entry) ==
-               [
-                 {:descriptive_record, :error, :incorrect_length},
-                 {:detail_record, :ok,
-                  {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
-                   "4dd86..4936b", "Bank cashback", "040-404", "12345678", "test", 0}},
-                 {:detail_record, :ok,
-                  {"040-404", "12345678", :blank, :externally_initiated_debit, 35389, "Records",
-                   "Fake payment", "040-404", "12345678", "test", 0}},
-                 {:file_total_record, :error, {:invalid_format, [:bsb_filler, :records_mismatch]}}
-               ]
+        [{:descriptive_record, :error, :incorrect_length}, {:detail_record, :error, {:invalid_format, [:bsb]}, 2}, {:detail_record, :error, :incorrect_length, 3}, {:file_total_record, :error, {:invalid_format, [:bsb_filler, :records_mismatch]}}]
     end
 
-    test "returns an error if incorrect length with correct starting code" do
+    test "succesfully provides error if file doesn't exist" do
       assert AbaValidator.process_aba_file("1") == {:error, :file_doesnt_exists}
     end
   end
