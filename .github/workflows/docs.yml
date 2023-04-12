@@ -1,0 +1,30 @@
+name: Re-publish docs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish_package:
+    name: Publish to hex.pm
+    runs-on: ubuntu-latest
+    env:
+      HEX_API_KEY: ${{secrets.HEX_API_KEY}}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: 1.14
+          otp-version: 24.2
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Create docs
+        run: mix docs
+
+      - name: Publish docs
+        run: mix hex.publish docs --yes
