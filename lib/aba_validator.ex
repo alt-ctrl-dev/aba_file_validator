@@ -25,40 +25,45 @@ defmodule AbaValidator do
 
 
   """
-  def validate_aba_file!(file_path) when is_binary(file_path) do
-    File.stream!(file_path)
-    |> Stream.with_index(1)
-    |> Stream.transform({0, 0, 0, false, false}, fn
-      {line, index},
-      {description_count, detail_count, file_count, description_proceed?, file_record_processed?} ->
-        determine_record_type(line)
-        |> case do
-          :error ->
-            {:halt, :error}
+  def validate_aba_file(file_path) when is_binary(file_path) do
+    unless File.exists?(file_path) do
+      {:error, :file_doesnt_exists}
+    else
+      File.stream!(file_path)
+      |> Stream.with_index(1)
+      |> Stream.transform({0, 0, 0, false, false}, fn
+        {line, index},
+        {description_count, detail_count, file_count, description_proceed?,
+         file_record_processed?} ->
+          determine_record_type(line)
+          |> case do
+            :error ->
+              {:halt, :error}
 
-          :description ->
-            if description_proceed? do
-              raise "Line #{index}: Multiple description records in file"
-            end
+            :description ->
+              if description_proceed? do
+                raise "Line #{index}: Multiple description records in file"
+              end
 
-            {process_aba_contents(line, index),
-             {description_count + 1, detail_count, file_count, true, file_record_processed?}}
+              {process_aba_contents(line, index),
+               {description_count + 1, detail_count, file_count, true, file_record_processed?}}
 
-          :detail ->
-            {process_aba_contents(line, index),
-             {description_count, detail_count + 1, file_count, description_proceed?,
-              file_record_processed?}}
+            :detail ->
+              {process_aba_contents(line, index),
+               {description_count, detail_count + 1, file_count, description_proceed?,
+                file_record_processed?}}
 
-          :file_total ->
-            if file_record_processed? do
-              raise "Line #{index}: Multiple file total records in file"
-            end
+            :file_total ->
+              if file_record_processed? do
+                raise "Line #{index}: Multiple file total records in file"
+              end
 
-            {process_aba_contents(line, detail_count),
-             {description_count, detail_count, file_count + 1, description_proceed?, true}}
-        end
-    end)
-    |> Enum.to_list()
+              {process_aba_contents(line, detail_count),
+               {description_count, detail_count, file_count + 1, description_proceed?, true}}
+          end
+      end)
+      |> Enum.to_list()
+    end
   end
 
   defp determine_record_type("0" <> _), do: :description
