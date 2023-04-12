@@ -2,11 +2,12 @@ defmodule AbaValidator.MixProject do
   use Mix.Project
 
   @github_link "https://github.com/alt-ctrl-dev/aba_validator"
+  @version "2.0.0"
 
   def project do
     [
       app: :aba_validator,
-      version: get_version(),
+      version: @version,
       elixir: "~> 1.14",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -39,10 +40,6 @@ defmodule AbaValidator.MixProject do
 
   defp description() do
     "an Elixir library to validate an Australian Banking Association (ABA) file"
-  end
-
-  defp get_version() do
-    "1.1.0"
   end
 
   defp package() do
