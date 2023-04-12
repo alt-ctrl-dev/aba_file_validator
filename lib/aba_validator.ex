@@ -10,12 +10,18 @@ defmodule AbaValidator do
 
   ## Examples
   iex> AbaValidator.validate_aba_file!("./test/helper/test.aba")
-  {
-  {"01", "CBA", "test                      ", "301500", "221212121227", "121222"},
-  [{"040-440", "123456", :blank, :externally_initiated_credit, 35389, "4dd86..4936b", "Return", "040-404", "12345678", "test", 0}
-  ],
-  {0, 35389, 35389, 2}
-  }
+  [
+  {:descriptive_record, :ok,
+   {"01", "CBA", "test                      ", "301500", "221212121227",
+    "121222"}},
+  {:detail_record, :ok,
+   {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
+    "4dd86..4936b", "Bank cashback", "040-404", "12345678", "test", 0}},
+  {:detail_record, :ok,
+   {"040-404", "12345678", :blank, :externally_initiated_debit, 35389,
+    "Records", "Fake payment", "040-404", "12345678", "test", 0}},
+  {:file_total_record, :output, {0, 35389, 35389, 2}}
+  ]
 
 
   """
