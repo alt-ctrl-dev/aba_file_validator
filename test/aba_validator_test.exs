@@ -43,8 +43,8 @@ defmodule AbaValidatorTest do
         "0                 01CBA       test                      301500221212121227121222                                        "
 
       assert AbaValidator.get_descriptive_record(entry) ==
-               {:ok, {"01", "CBA", "test                      ", "301500", "221212121227",
-                "121222"}}
+               {:ok,
+                {"01", "CBA", "test                      ", "301500", "221212121227", "121222"}}
     end
 
     test "returns an error if incorrect length with correct starting code" do
@@ -76,15 +76,16 @@ defmodule AbaValidatorTest do
         "0                                                                                                                       "
 
       assert AbaValidator.get_descriptive_record(entry) ==
-               {:error, {:invalid_format,
-                [
-                  :reel_sequence_number,
-                  :bank_abbreviation,
-                  :user_preferred_specification,
-                  :user_id_number,
-                  :description,
-                  :date
-                ]}}
+               {:error,
+                {:invalid_format,
+                 [
+                   :reel_sequence_number,
+                   :bank_abbreviation,
+                   :user_preferred_specification,
+                   :user_id_number,
+                   :description,
+                   :date
+                 ]}}
     end
   end
 
@@ -126,8 +127,9 @@ defmodule AbaValidatorTest do
         "7                                                                                                                       "
 
       assert AbaValidator.get_file_total_record(entry) ==
-               {:error, {:invalid_format,
-                [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}}
+               {:error,
+                {:invalid_format,
+                 [:bsb_filler, :net_total, :total_credit, :total_debit, :record_count]}}
     end
 
     test "returns an error if balance don't match" do
@@ -153,15 +155,17 @@ defmodule AbaValidatorTest do
         "1032-898 12345678 130000035389 money                           Batch payment    040-404 12345678 test           00000000"
 
       assert AbaValidator.get_detail_record(entry) ==
-               {:ok, {"032-898", "12345678", :blank, :externally_initiated_debit, 35389, " money",
-                " Batch payment", "040-404", "12345678", " test", 0}}
+               {:ok,
+                {"032-898", "12345678", :blank, :externally_initiated_debit, 35389, " money",
+                 " Batch payment", "040-404", "12345678", " test", 0}}
 
       entry =
         "1032-8980-2345678N130000035389money                           Batch payment     040-404 12345678test            00000000"
 
       assert AbaValidator.get_detail_record(entry) ==
-               {:ok, {"032-898", "0-2345678", :new_bank, :externally_initiated_debit, 35389,
-                "money", "Batch payment", "040-404", "12345678", "test", 0}}
+               {:ok,
+                {"032-898", "0-2345678", :new_bank, :externally_initiated_debit, 35389, "money",
+                 "Batch payment", "040-404", "12345678", "test", 0}}
     end
 
     test "returns an error if incorrect length with correct starting code" do
@@ -193,19 +197,57 @@ defmodule AbaValidatorTest do
         "1                                                                                                                       "
 
       assert AbaValidator.get_detail_record(entry) ==
-               {:error, {:invalid_format,
-                [
-                  :bsb,
-                  :account_number,
-                  :transasction_code,
-                  :amount,
-                  :account_name,
-                  :reference,
-                  :trace_record,
-                  :trace_account_number,
-                  :remitter,
-                  :withheld_tax
-                ]}}
+               {:error,
+                {:invalid_format,
+                 [
+                   :bsb,
+                   :account_number,
+                   :transasction_code,
+                   :amount,
+                   :account_name,
+                   :reference,
+                   :trace_record,
+                   :trace_account_number,
+                   :remitter,
+                   :withheld_tax
+                 ]}}
+    end
+  end
+
+  describe "AbaValidator.process_aba_file/1" do
+    test "validates succesfully" do
+      entry = "./test/helper/test.aba"
+
+      assert AbaValidator.process_aba_file(entry) ==
+               [
+                 {:descriptive_record, :ok,
+                  {"01", "CBA", "test                      ", "301500", "221212121227", "121222"}},
+                 {:detail_record, :ok,
+                  {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
+                   "4dd86..4936b", "Bank cashback", "040-404", "12345678", "test", 0}},
+                 {:detail_record, :ok,
+                  {"040-404", "12345678", :blank, :externally_initiated_debit, 35389, "Records",
+                   "Fake payment", "040-404", "12345678", "test", 0}},
+                 {:file_total_record, :output, {0, 35389, 35389, 2}}
+               ]
+
+      entry = "./test/helper/test1.aba"
+
+      assert AbaValidator.process_aba_file(entry) ==
+               [
+                 {:descriptive_record, :error, :incorrect_length},
+                 {:detail_record, :ok,
+                  {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
+                   "4dd86..4936b", "Bank cashback", "040-404", "12345678", "test", 0}},
+                 {:detail_record, :ok,
+                  {"040-404", "12345678", :blank, :externally_initiated_debit, 35389, "Records",
+                   "Fake payment", "040-404", "12345678", "test", 0}},
+                 {:file_total_record, :error, {:invalid_format, [:bsb_filler, :records_mismatch]}}
+               ]
+    end
+
+    test "returns an error if incorrect length with correct starting code" do
+      assert AbaValidator.process_aba_file("1") == {:error, :file_doesnt_exists}
     end
   end
 end
