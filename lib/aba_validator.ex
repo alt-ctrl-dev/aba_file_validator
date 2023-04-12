@@ -5,17 +5,16 @@ defmodule AbaValidator do
   Documentation for `AbaValidator`.
   """
   @doc """
-  Reads a file and validates it as an ABA file.
-  This will raise an exception if there are multiple descriptive or file records
+  Reads a file, validates it as an ABA file and returns the processed contents.
 
   ## Examples
-  iex> AbaValidator.validate_aba_file("./test/helper")
+  iex> AbaValidator.process_aba_file("./test/helper")
   {:error, :file_doesnt_exists}
 
-  iex> AbaValidator.validate_aba_file("./test/helper/test.txt")
+  iex> AbaValidator.process_aba_file("./test/helper/test.txt")
   {:error, :file_doesnt_exists}
 
-  iex> AbaValidator.validate_aba_file("./test/helper/test.aba")
+  iex> AbaValidator.process_aba_file("./test/helper/test.aba")
   [
   {:descriptive_record, :ok,
    {"01", "CBA", "test                      ", "301500", "221212121227",
@@ -31,7 +30,7 @@ defmodule AbaValidator do
 
 
   """
-  def validate_aba_file(file_path) when is_binary(file_path) do
+  def process_aba_file(file_path) when is_binary(file_path) do
     unless not File.dir?(file_path) and File.exists?(file_path) do
       {:error, :file_doesnt_exists}
     else
