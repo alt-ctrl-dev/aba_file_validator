@@ -9,7 +9,13 @@ defmodule AbaValidator do
   This will raise an exception if there are multiple descriptive or file records
 
   ## Examples
-  iex> AbaValidator.validate_aba_file!("./test/helper/test.aba")
+  iex> AbaValidator.validate_aba_file("./test/helper")
+  {:error, :file_doesnt_exists}
+
+  iex> AbaValidator.validate_aba_file("./test/helper/test.txt")
+  {:error, :file_doesnt_exists}
+
+  iex> AbaValidator.validate_aba_file("./test/helper/test.aba")
   [
   {:descriptive_record, :ok,
    {"01", "CBA", "test                      ", "301500", "221212121227",
@@ -26,7 +32,7 @@ defmodule AbaValidator do
 
   """
   def validate_aba_file(file_path) when is_binary(file_path) do
-    unless File.exists?(file_path) do
+    unless not File.dir?(file_path) and File.exists?(file_path) do
       {:error, :file_doesnt_exists}
     else
       File.stream!(file_path)
