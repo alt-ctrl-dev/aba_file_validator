@@ -82,7 +82,7 @@ defmodule AbaValidator do
     String.trim(line, "\n")
     |> get_file_total_record(count)
     |> case do
-      {:ok, output} -> [{:file_total_record, output: output}]
+      {:ok, output} -> [{:file_total_record, :output, output}]
       {:error, error} -> [{:file_total_record, :error, error}]
     end
   end
