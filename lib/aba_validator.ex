@@ -108,7 +108,7 @@ defmodule AbaValidator do
   end
 
   @doc """
-  Get the entries as part of the descriptiive record
+  Get the entries as part of the descriptive record
 
   ## Examples
 
