@@ -39,16 +39,10 @@ defmodule AbaValidator.MultipleFileRecordsError do
   defexception [:message, :line]
   @impl true
   def exception([line: line] = args) when is_list(args) do
-    %AbaValidator.MultipleFileRecordsError{
-      message: "Multiple file total records in file",
-      line: line
-    }
+    %AbaValidator.MultipleFileRecordsError{message: "Multiple file total records in file", line: line}
   end
 
   def exception(line) when is_integer(line) do
-    %AbaValidator.MultipleFileRecordsError{
-      message: "Multiple file total records in file",
-      line: line
-    }
+    %AbaValidator.MultipleFileRecordsError{message: "Multiple file total records in file", line: line}
   end
 end
