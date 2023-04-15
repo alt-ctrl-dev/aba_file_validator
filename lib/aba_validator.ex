@@ -9,6 +9,82 @@ defmodule AbaValidator do
   alias __MODULE__.MultipleDescriptionRecordsError
 
   @doc """
+  Reads a file, validates it as an ABA file, processes the contents and returns the contents for the requested type (By default type is set as all).
+
+  ## Examples
+  iex> AbaValidator.get_records("./test/helper")
+  {:error, :file_doesnt_exists}
+
+  iex> AbaValidator.get_records("./test/helper/missing.txt")
+  {:error, :file_doesnt_exists}
+
+  iex> AbaValidator.get_records("./test/helper/test.txt")
+  {:error, :no_content}
+
+  iex> AbaValidator.get_records("./test/helper/test.aba")
+  {{:descriptive_record, :ok,
+   {"01", "CBA", "test                      ", "301500", "221212121227",
+    "121222"}},
+    [{:detail_record, :ok,
+   {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
+    "4dd86..4936b", "Bank cashback", "040-404", "12345678", "test", 0}},
+  {:detail_record, :ok,
+   {"040-404", "12345678", :blank, :externally_initiated_debit, 35389,
+    "Records", "Fake payment", "040-404", "12345678", "test", 0}}],
+  {:file_total_record, :output, {0, 35389, 35389, 2}}}
+
+  iex> AbaValidator.get_records("./test/helper/test.aba", :detail_record)
+  [{:detail_record, :ok,
+   {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
+    "4dd86..4936b", "Bank cashback", "040-404", "12345678", "test", 0}},
+  {:detail_record, :ok,
+   {"040-404", "12345678", :blank, :externally_initiated_debit, 35389,
+    "Records", "Fake payment", "040-404", "12345678", "test", 0}}]
+
+  iex> AbaValidator.get_records("./test/helper/test.aba", :file_record)
+  {:file_total_record, :output, {0, 35389, 35389, 2}}
+
+  iex> AbaValidator.get_records("./test/helper/test.aba", :descriptive_record)
+  {:descriptive_record, :ok,
+   {"01", "CBA", "test                      ", "301500", "221212121227",
+    "121222"}}
+
+
+  """
+  def get_records(file_path, type \\ :all) do
+    process_aba_file(file_path)
+    |> case do
+      {:error, reason} ->
+        {:error, reason}
+
+      {:error, :multiple_description_records, args} ->
+        {:error, :multiple_description_records, args}
+
+      {:error, :multiple_file_total_records, args} ->
+        {:error, :multiple_file_total_records, args}
+
+      result ->
+        [descriptive_record | rest] = result
+        [file_record | detail_records] = Enum.reverse(rest)
+        detail_records = Enum.reverse(detail_records)
+
+        case type do
+          :descriptive_record ->
+            descriptive_record
+
+          :file_record ->
+            file_record
+
+          :detail_record ->
+            detail_records
+
+          _ ->
+            {descriptive_record, detail_records, file_record}
+        end
+    end
+  end
+
+  @doc """
   Reads a file, validates it as an ABA file and returns the processed contents.
 
   ## Examples

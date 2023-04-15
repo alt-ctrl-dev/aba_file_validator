@@ -279,4 +279,98 @@ defmodule AbaValidatorTest do
                {:error, :multiple_file_total_records, [line: 2]}
     end
   end
+
+  describe "AbaValidator.get_records/1" do
+    test "succesfully returns the correct content when default type is used" do
+      entry = "./test/helper/test.aba"
+
+      assert AbaValidator.get_records(entry) ==
+               {{:descriptive_record, :ok,
+                 {"01", "CBA", "test                      ", "301500", "221212121227", "121222"}},
+                [
+                  {:detail_record, :ok,
+                   {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
+                    "4dd86..4936b", "Bank cashback", "040-404", "12345678", "test", 0}},
+                  {:detail_record, :ok,
+                   {"040-404", "12345678", :blank, :externally_initiated_debit, 35389, "Records",
+                    "Fake payment", "040-404", "12345678", "test", 0}}
+                ], {:file_total_record, :output, {0, 35389, 35389, 2}}}
+    end
+
+    test "succesfully returns the correct content when type is :file_record" do
+      entry = "./test/helper/test.aba"
+
+      assert AbaValidator.get_records(entry, :file_record) ==
+               {:file_total_record, :output, {0, 35389, 35389, 2}}
+    end
+
+    test "succesfully returns the correct content when type is :descriptive_record" do
+      entry = "./test/helper/test.aba"
+
+      assert AbaValidator.get_records(entry, :descriptive_record) ==
+               {:descriptive_record, :ok,
+                {"01", "CBA", "test                      ", "301500", "221212121227", "121222"}}
+    end
+
+    test "succesfully returns the correct content when type is :detail_record" do
+      entry = "./test/helper/test.aba"
+
+      assert AbaValidator.get_records(entry, :detail_record) ==
+               [
+                 {:detail_record, :ok,
+                  {"040-440", "123456", :blank, :externally_initiated_credit, 35389,
+                   "4dd86..4936b", "Bank cashback", "040-404", "12345678", "test", 0}},
+                 {:detail_record, :ok,
+                  {"040-404", "12345678", :blank, :externally_initiated_debit, 35389, "Records",
+                   "Fake payment", "040-404", "12345678", "test", 0}}
+               ]
+    end
+
+    test "succesfully gets errors" do
+      entry = "./test/helper/test1.aba"
+
+      assert AbaValidator.get_records(entry) ==
+               {{:descriptive_record, :error, :incorrect_length},
+                [
+                  {:detail_record, :error, {:invalid_format, [:bsb]}, 2},
+                  {:detail_record, :error, :incorrect_length, 3}
+                ],
+                {:file_total_record, :error, {:invalid_format, [:bsb_filler, :records_mismatch]}}}
+    end
+
+    test "succesfully provides error if file doesn't exist" do
+      assert AbaValidator.get_records("1") == {:error, :file_doesnt_exists}
+    end
+
+    test "succesfully provides error if file is empty" do
+      assert AbaValidator.get_records("./test/helper/test.txt") ==
+               {:error, :no_content}
+    end
+
+    test "succesfully provides error if the order is incorrect" do
+      assert AbaValidator.get_records("./test/helper/incorrect_order.aba") ==
+               {:error, :incorrect_order_detected}
+    end
+
+    test "succesfully provides error if file has no read permission" do
+      file_path = "./test/helper/permission.txt"
+      File.touch!(file_path)
+      File.chmod!(file_path, 0o020)
+
+      assert AbaValidator.get_records(file_path) ==
+               {:error, :eacces}
+
+      File.rm!(file_path)
+    end
+
+    test "succesfully provides error if multiple description records are present" do
+      assert AbaValidator.get_records("./test/helper/multiple_description_records.aba") ==
+               {:error, :multiple_description_records, [line: 2]}
+    end
+
+    test "succesfully provides error if multiple file records are present" do
+      assert AbaValidator.get_records("./test/helper/multiple_file_records.aba") ==
+               {:error, :multiple_file_total_records, [line: 2]}
+    end
+  end
 end
