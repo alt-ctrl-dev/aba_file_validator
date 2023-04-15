@@ -34,6 +34,28 @@ defmodule AbaValidator do
     unless not File.dir?(file_path) and File.exists?(file_path) do
       {:error, :file_doesnt_exists}
     else
+      File.stat(file_path)
+      |> case do
+        {:ok,
+         %File.Stat{
+           access: :read
+         }} ->
+          process_file(file_path)
+
+        {:ok,
+         %File.Stat{
+           access: :read_write
+         }} ->
+          process_file(file_path)
+
+        {:ok, _} ->
+          {:error, :eacces}
+
+        error ->
+          error
+      end
+    end
+  end
       File.stream!(file_path)
       |> Stream.with_index(1)
       |> Stream.transform({0, 0, 0, false, false}, fn
