@@ -247,5 +247,36 @@ defmodule AbaValidatorTest do
     test "succesfully provides error if file doesn't exist" do
       assert AbaValidator.process_aba_file("1") == {:error, :file_doesnt_exists}
     end
+
+    test "succesfully provides error if file is empty" do
+      assert AbaValidator.process_aba_file("./test/helper/test.txt") ==
+               {:error, :no_content}
+    end
+
+    test "succesfully provides error if the order is incorrect" do
+      assert AbaValidator.process_aba_file("./test/helper/incorrect_order.aba") ==
+               {:error, :incorrect_order_detected}
+    end
+
+    test "succesfully provides error if file has no read permission" do
+      file_path = "./test/helper/permission.txt"
+      File.touch!(file_path)
+      File.chmod!(file_path, 0o020)
+
+      assert AbaValidator.process_aba_file(file_path) ==
+               {:error, :eacces}
+
+      File.rm!(file_path)
+    end
+
+    test "succesfully provides error if multiple description records are present" do
+      assert AbaValidator.process_aba_file("./test/helper/multiple_description_records.aba") ==
+               {:error, :multiple_description_records, [line: 2]}
+    end
+
+    test "succesfully provides error if multiple file records are present" do
+      assert AbaValidator.process_aba_file("./test/helper/multiple_file_records.aba") ==
+               {:error, :multiple_file_total_records, [line: 2]}
+    end
   end
 end
