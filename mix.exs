@@ -2,7 +2,7 @@ defmodule AbaValidator.MixProject do
   use Mix.Project
 
   @github_link "https://github.com/alt-ctrl-dev/aba_validator"
-  @version "2.0.0"
+  @version "2.1.0"
 
   def project do
     [
