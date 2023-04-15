@@ -113,14 +113,14 @@ defmodule AbaValidator do
           "Attempting to rescue unknown error #{inspect(error)}. Please report here: https://github.com/alt-ctrl-dev/aba_validator/issues/new?assignees=&labels=Kind%3ABug%2CState%3ATriage&template=bug.yml"
         )
 
-        {:error, IO.inspect(error)}
+        {:error, :unknown_rescue}
     catch
       value ->
         IO.warn(
           "Caught unknown error #{inspect(value)}. Please report here: https://github.com/alt-ctrl-dev/aba_validator/issues/new?assignees=&labels=Kind%3ABug%2CState%3ATriage&template=bug.yml"
         )
 
-        {:error, :uncaught}
+        {:error, :unknown_caught}
     end
   end
 
