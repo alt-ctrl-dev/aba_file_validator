@@ -98,6 +98,9 @@ jobs:
     # Customize this step as desired.
     - name: Check Formatting
       run: mix format --check-formatted
+    
+    - if: failure()
+      run: echo "### Failed on lint" >> $GITHUB_STEP_SUMMARY
 
     # Step: Execute the tests.
     - name: Run tests
