@@ -1,9 +1,13 @@
 defmodule AbaValidator do
   import __MODULE__.Utils
+  import __MODULE__.Guards
 
   @moduledoc """
   Documentation for `AbaValidator`.
   """
+  alias __MODULE__.MultipleFileRecordsError
+  alias __MODULE__.MultipleDescriptionRecordsError
+
   @doc """
   Reads a file, validates it as an ABA file and returns the processed contents.
 
@@ -30,6 +34,7 @@ defmodule AbaValidator do
 
 
   """
+
   def process_aba_file(file_path) when is_binary(file_path) do
     unless not File.dir?(file_path) and File.exists?(file_path) do
       {:error, :file_doesnt_exists}
@@ -56,41 +61,89 @@ defmodule AbaValidator do
       end
     end
   end
+
+  defp process_file(file_path) do
+    try do
       File.stream!(file_path)
       |> Stream.with_index(1)
-      |> Stream.transform({0, 0, 0, false, false}, fn
+      |> Stream.transform({0, 0, 0, [], []}, fn
         {line, index},
-        {description_count, detail_count, file_count, description_proceed?,
-         file_record_processed?} ->
+        {description_count, detail_count, file_count, description_line,
+         file_record_line } ->
           determine_record_type(line)
           |> case do
             :error ->
               {:halt, :error}
 
             :description ->
-              if description_proceed? do
-                raise "Line #{index}: Multiple description records in file"
+              if length(description_line)>0 do
+                raise MultipleDescriptionRecordsError, index
               end
 
               {process_aba_contents(line, index),
-               {description_count + 1, detail_count, file_count, true, file_record_processed?}}
+               {description_count + 1, detail_count, file_count, [index], file_record_line}}
 
             :detail ->
               {process_aba_contents(line, index),
-               {description_count, detail_count + 1, file_count, description_proceed?,
-                file_record_processed?}}
+               {description_count, detail_count + 1, file_count, description_line,
+               file_record_line}}
 
             :file_total ->
-              if file_record_processed? do
-                raise "Line #{index}: Multiple file total records in file"
+              if length(file_record_line) > 0 do
+                raise MultipleFileRecordsError, hd(file_record_line)
               end
 
               {process_aba_contents(line, detail_count),
-               {description_count, detail_count, file_count + 1, description_proceed?, true}}
+               {description_count, detail_count, file_count + 1, description_line, [index]}}
+
           end
       end)
       |> Enum.to_list()
+      |> process_result()
+    rescue
+      error in [MultipleDescriptionRecordsError] ->
+        {:error, :multiple_description_records, line: error.line}
+
+      error in [MultipleFileRecordsError] ->
+        {:error, :multiple_file_total_records, line: error.line}
+
+      error ->
+        IO.warn(
+          "Attempting to rescue unknown error #{inspect(error)}. Please report here: https://github.com/alt-ctrl-dev/aba_validator/issues/new?assignees=&labels=Kind%3ABug%2CState%3ATriage&template=bug.yml"
+        )
+
+        {:error, IO.inspect(error)}
+    catch
+      value ->
+        IO.warn(
+          "Caught unknown error #{inspect(value)}. Please report here: https://github.com/alt-ctrl-dev/aba_validator/issues/new?assignees=&labels=Kind%3ABug%2CState%3ATriage&template=bug.yml"
+        )
+
+        {:error, :uncaught}
     end
+  end
+
+  defp process_result([]), do: {:error, :no_content}
+
+  defp process_result([descriptive_record | rest] = result)
+       when is_list(result) and is_descriptive_record(descriptive_record) do
+    [file_record | _detail_records] = Enum.reverse(rest)
+
+    if is_file_record(file_record) do
+      result
+    else
+      {:error, :incorrect_order_detected}
+    end
+  end
+
+  defp process_result([record | _rest] = result)
+       when is_list(result) and not is_descriptive_record(record) do
+    {:error, :incorrect_order_detected}
+  end
+
+  defp process_result(error) do
+    error |> IO.inspect(label: "process_result error")
+    {:error, :process_result}
   end
 
   defp determine_record_type("0" <> _), do: :description
