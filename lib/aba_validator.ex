@@ -71,15 +71,14 @@ defmodule AbaValidator do
       |> Stream.with_index(1)
       |> Stream.transform({0, 0, 0, [], []}, fn
         {line, index},
-        {description_count, detail_count, file_count, description_line,
-         file_record_line } ->
+        {description_count, detail_count, file_count, description_line, file_record_line} ->
           determine_record_type(line)
           |> case do
             :error ->
               {:halt, :error}
 
             :description ->
-              if length(description_line)>0 do
+              if length(description_line) > 0 do
                 raise MultipleDescriptionRecordsError, index
               end
 
@@ -89,7 +88,7 @@ defmodule AbaValidator do
             :detail ->
               {process_aba_contents(line, index),
                {description_count, detail_count + 1, file_count, description_line,
-               file_record_line}}
+                file_record_line}}
 
             :file_total ->
               if length(file_record_line) > 0 do
@@ -98,7 +97,6 @@ defmodule AbaValidator do
 
               {process_aba_contents(line, detail_count),
                {description_count, detail_count, file_count + 1, description_line, [index]}}
-
           end
       end)
       |> Enum.to_list()
