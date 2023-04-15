@@ -15,8 +15,11 @@ defmodule AbaValidator do
   iex> AbaValidator.process_aba_file("./test/helper")
   {:error, :file_doesnt_exists}
 
-  iex> AbaValidator.process_aba_file("./test/helper/test.txt")
+  iex> AbaValidator.process_aba_file("./test/helper/missing.txt")
   {:error, :file_doesnt_exists}
+
+  iex> AbaValidator.process_aba_file("./test/helper/test.txt")
+  {:error, :no_content}
 
   iex> AbaValidator.process_aba_file("./test/helper/test.aba")
   [
