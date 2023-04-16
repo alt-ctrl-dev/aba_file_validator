@@ -25,4 +25,5 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/aba_validator>.
 
-**Note**: Do not use anything below v2.0.
+
+> **Note**: Do not use anything below v2.0.
