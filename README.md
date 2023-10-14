@@ -26,4 +26,4 @@ and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/aba_validator>.
 
 
-> **⚠️**: Do not use anything below v2.0.
+> **⚠️**: Do not use any version of this library below v2.0.
